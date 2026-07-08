@@ -8,7 +8,8 @@ CREATE TABLE staff (
   name TEXT NOT NULL,
   role staff_role NOT NULL,
   auth_id TEXT UNIQUE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT staff_location_required CHECK (role NOT IN ('kitchen', 'floor') OR location_id IS NOT NULL)
 );
 
 CREATE INDEX idx_staff_tenant_id ON staff(tenant_id);

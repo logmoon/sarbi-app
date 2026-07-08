@@ -19,7 +19,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 ## In Progress
 
 <!-- What is actively being built right now — update as you go -->
-- 02. Supabase Auth + Role System — built, not yet reviewed/tested
+- 03. Database Schema + RLS Policies — built, awaiting review
 
 ---
 
@@ -32,7 +32,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 
 ## Up Next
 
-03. Database Schema + RLS Policies
+04. Menu CRUD (Admin Dashboard Editor)
 
 ---
 
