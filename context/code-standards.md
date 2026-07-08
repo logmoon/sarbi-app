@@ -91,6 +91,8 @@ export function OrderCard({ order, onStart }: OrderCardProps) {
 | `UPSTASH_REDIS_REST_URL` | Server only | Upstash Redis REST URL |
 | `UPSTASH_REDIS_REST_TOKEN` | Server only | Upstash Redis REST token |
 | `RESEND_API_KEY` | Server only | Resend email API key |
+| `INVITE_SECRET` | Server only | Secret key for signing invite JWTs (at least 32 chars) |
+| `NEXT_PUBLIC_APP_URL` | Client + Server | Public base URL of the app (e.g. `http://localhost:3000`) |
 
 ---
 
@@ -113,3 +115,4 @@ Nothing added to `package.json` without updating this section.
 | `zod` | Input validation |
 | `clsx` | Conditional classnames |
 | `tailwind-merge` | Tailwind class deduplication |
+| `jose` | JWT signing and verification for invite tokens |

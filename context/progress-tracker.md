@@ -19,18 +19,20 @@ _Read this at the start of every session before doing anything else. Keep it cur
 ## In Progress
 
 <!-- What is actively being built right now — update as you go -->
+- 02. Supabase Auth + Role System — built, not yet reviewed/tested
 
 ---
 
 ## Done
 
 - 01. Project Scaffold + Supabase Setup
+- 02. Supabase Auth + Role System
 
 ---
 
 ## Up Next
 
-02. Supabase Auth + Role System
+03. Database Schema + RLS Policies
 
 ---
 

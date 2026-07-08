@@ -20,6 +20,39 @@ This file is read first by any AI coding agent. It defines the skills available 
 
 ---
 
+## Session Gates
+
+A gate is a point in this protocol where work must stop until the developer gives an explicit
+answer to the specific question the agent asked — not any affirmative reply to a nearby question.
+A gate is not advisory. If it hasn't been passed, nothing on the other side of it happens, no
+matter how confident the plan seems or how simple the feature looks.
+
+**Passing a gate requires two things:**
+1. The agent asks a single-purpose question that can only resolve one way — never bundled with a
+   feature-selection question, a status update, or anything else.
+2. The developer's reply directly answers that question. "Yep" to "should I begin there?"
+   confirms the *feature*, not the plan — the agent still has to ask the gate question separately.
+
+**If asked to skip ahead of a gate** — e.g. told to start a new feature before the current one has
+closed out — state which gate hasn't been passed and ask whether to close out first or override
+this once. Never comply silently.
+
+**A gate cannot be passed in advance.** Approval-sounding language given before the gate's artifact
+exists — "go for it," "sounds good, do it" before an architect plan or review report has actually
+been produced — doesn't count, no matter how enthusiastic. Produce the artifact first, then ask.
+
+| Gate | Opens | Passes when |
+|---|---|---|
+| **Architect Gate** | Before any code is written for a feature | The developer has explicitly approved the plan produced by `/architect`'s own Step 5 format — not any other implementation summary the agent writes itself |
+| **Review Gate** | After a feature is built, before it's considered done | `/review` has been dispatched to `@reviewer`, findings relayed, and the developer has said the feature is satisfactory |
+| **Close-out Gate** | After the developer confirms satisfaction | The developer has explicitly confirmed the close-out prompt — commit, imprint, tracker update, `/remember save`, distill proposal all happen only after this |
+| **Session-Scope Gate** | Whenever a new feature is requested | The current feature has passed the Close-out Gate, or the developer has explicitly said to override the one-feature-per-session rule |
+
+None of these are satisfied by: an affirmative reply to a different question, a passing build, or
+a plan-shaped answer produced outside the named skill's own procedure.
+
+---
+
 ## Session Protocol
 
 **Clarify before correcting.** If the user's response suggests you misunderstood them — short or ambiguous answers like "wdym", "no", "that's not right" — do not guess what went wrong. Ask: "What part of my last response was wrong?" Identify the actual issue before changing course. This applies across all phases.
@@ -30,8 +63,10 @@ Before planning: if any `context/*.md` file is still a stub (first session), run
 
 **Scope discipline.** Do not pre-plan or schedule future features beyond what the user is asking about right now. The build plan and progress tracker describe the project's scope — they are reference material, not a todo list for the current session. Only work on what the user explicitly asks for.
 
+**Session-Scope Gate.** One feature per session. If a new feature is requested before the current one has passed the Close-out Gate, say so and ask whether to close out first or override.
+
 1. The memory hook has injected a start-of-session note at the top of this session. If it contains a restore summary, confirm it with the user before proceeding. If it says "Fresh session. Ready.", no checkpoint is needed. Either way, run `/remember restore` if you need the full cross-checked picture or if a prior session ended abnormally.
-2. Run `/architect` — think through the feature before touching code. Present the plan and wait for explicit approval before proceeding
+2. **Architect Gate** — run `/architect`, in full, even when the feature looks trivial and no real decisions surface. The skill still runs through its own steps and still ends in "Blueprint ready" + its formatted plan — never substitute an ad hoc numbered list for that format.
 3. After the user approves the plan, if the project has a git repo, ask: "Should I create a feature branch for this? (e.g. feat/<feature-name>)" If yes, run `git checkout -b feat/<feature-name>` before building.
 
 Do not write any code until the user has explicitly approved the plan.
@@ -39,9 +74,9 @@ Do not write any code until the user has explicitly approved the plan.
 ### Phase 2 — Building
 
 1. Build the feature. For any UI pattern not already described in ui-registry.md, consult the ui-ux-frontend skill first — otherwise match what ui-registry.md already records
-2. Run `/review` — dispatch `@reviewer` (read-only by config, can't edit/write/bash) with the plan, the relevant context files, and the diff. Do not review your own work in the same session that built it. Report findings and stop — never fix what you find.
+2. **Review Gate** — dispatch `@reviewer` (read-only by config, can't edit/write/bash) with the plan, the relevant context files, and the diff. Do not review your own work in the same session that built it. Report findings and stop — never fix what you find. This gate does not pass on a clean build; it passes only once the developer says the feature is satisfactory.
 3. Wait for the user to test and confirm. The user may report issues or request fixes — make only what they ask for and re-run `/review` as needed. Repeat until the user explicitly says they are satisfied.
-4. When the user confirms they are satisfied, prompt them: "Ready to close out the session? I'll commit the work, run /imprint, /remember save, and propose distill if anything's worth keeping." Wait for their confirmation before proceeding.
+4. **Close-out Gate** — when the user confirms they are satisfied, prompt them: "Ready to close out the session? I'll commit the work, run /imprint, /remember save, and propose distill if anything's worth keeping." Wait for their confirmation before proceeding.
 5. If the project has a git repo, stage and commit the work: `git add -A && git commit -m "feat: <description>"`. If you created a feature branch for this work, switch back to the main branch, merge, and delete the feature branch: `git checkout main && git merge <branch-name> && git branch -d <branch-name>`.
 6. Run `/imprint` to capture UI patterns to ui-registry.md
 7. Update `context/progress-tracker.md` — reference it throughout the session as a live tracker, not a closing afterthought. Read it at the start of the build and keep it current as you go.
