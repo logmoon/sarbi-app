@@ -1,38 +1,55 @@
-# Memory — Database Schema + RLS Policies
+# Memory — Table Management + QR Code Generation
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-09_
 
 ---
 
 ## What was built
 
-- **SQL migrations 005-010** — 9 new tables: `categories`, `items`, `location_item_overrides`, `tables`, `sessions`, `orders`, `order_items`, `table_events`, `analytics_snapshots`
-- **Helper functions** — `get_user_tenant_id()`, `get_user_location_id()` (SECURITY DEFINER for RLS), `check_session_timeout()` (on-access), `update_updated_at_column()` trigger
-- **RLS policies** — on all 12 tables (including retrofitting existing 001-004 tables) covering super_admin, owner, location_manager, kitchen, floor, and anon roles
-- **Seed data** — 3 categories (Café Chaud, Pâtisseries, Jus Frais), 6 items with multi-language names/descriptions, 4 tables with 8-char public_codes
-- **Fixes from review** — CHECK constraint for kitchen/floor location_id NOT NULL, CHECK for public_code length = 8, ON DELETE SET NULL on orders.cancelled_by, consistent type casts, cleaner interval math
+- **Tables page** (`app/(platform)/dashboard/tables/page.tsx`) — server component rendering the tables manager
+- **Tables manager** (`components/tables/tables-manager.tsx`) — client orchestrator with fetch/add/update/delete, error banner, empty state, Download All (print window)
+- **Table card** (`components/tables/table-card.tsx`) — card with three visual states (Occupied/Available/Inactive), SVG QR preview, PNG/SVG download buttons, show/hide public code toggle with copy
+- **Add table dialog** (`components/tables/add-table-dialog.tsx`) — label input with Zod validation
+- **Edit table dialog** (`components/tables/edit-table-dialog.tsx`) — label + is_active toggle
+- **API routes:**
+  - `app/api/tables/route.ts` — GET (tables with session status via LEFT JOIN), POST (create with public_code + qr_code_url)
+  - `app/api/tables/[id]/route.ts` — PATCH (update label/is_active), DELETE (with active session guard, returns 409)
+- **API helper** (`lib/api-helpers.ts`) — added `getStaffTenantAndLocation()` returning tenant_id + location_id
+- **Zod schemas** (`lib/validators.ts`) — `createTableSchema`, `updateTableSchema`
+- **Sidebar** (`components/layout/sidebar.tsx`) — removed "Soon" badge from Tables
+- **Seed data** (`supabase/seed.sql`) — backfilled `qr_code_url` for all 4 seed tables
+- **Docs updated:** `context/progress-tracker.md`, `context/ui-registry.md` (TableCard entry)
 
 ## Decisions made
 
-- No pg_cron — session timeout enforced on-access via `check_session_timeout()` called by API routes
-- RLS uses helper functions with SECURITY DEFINER (not inline subqueries) to avoid RLS-on-subquery issues
-- Categories/items are tenant-scoped (not location-scoped); location overrides via `location_item_overrides`
-- Status fields use typed ENUMs (order_status, session_status, event_type, event_status)
-- Anon policies allow SELECT on tenants, available categories/items, and tables (needed for customer menu SSR)
+- Location scoping via `getStaffTenantAndLocation()` — single location in V1
+- Public code generated server-side (8-char random, retry loop on collision)
+- qr_code_url constructed server-side from NEXT_PUBLIC_APP_URL + tenant slug + public_code
+- QR images generated client-side via `qrcode` package — SVG for preview (no canvas), PNG via toDataURL (canvas) on download
+- Download All uses print-friendly window (no jspdf dependency)
+- Session status is a thin boolean via LEFT JOIN on sessions in GET /api/tables
+- Three visual states: is_active + has_active_session → Occupied/Available/Inactive
 
 ## Problems solved
 
-- `auth.uid()` returns `uuid` but `staff.auth_id` is `TEXT` — fixed with explicit `::text` casts in helper functions and policies
-- Existing tables (tenants, locations, staff) had RLS **enabled** but **zero policies** — 010 migration adds policies to all 3 retroactively
-- `check_session_timeout()` uses `session_timeout * interval '1 minute'` instead of string concatenation for interval construction
+- **QR preview crashes with "canvas is null":** seed tables had null qr_code_url. Fixed with null guard in component + seed data backfill. SVG generation (toString) doesn't need canvas; toDataURL only used on explicit download button click, wrapped in try/catch.
+- **QR preview SVG overflow:** SVG had native width="200" overriding container. Fixed with `[&>svg]:h-full [&>svg]:w-full` + `items-center` on the flex container.
+- **Review found 2 critical issues:** QR generation lacking try/catch (added), implicit `any` types on API response parsing (restructured to check-res.ok-first pattern with explicit ApiErrorResponse type).
 
 ## Current state
 
-Step 03 complete. All 12 tables exist with RLS enforced. Seed data populates the dev tenant with menu items and tables. The build passes clean.
+Step 05 complete. Owner can:
+- See grid of table cards with status (Occupied/Available/Inactive) via left border + badge
+- Add new tables (gets QR code URL generated automatically)
+- Edit table label or toggle active/inactive
+- Delete tables (blocked if active session exists)
+- Download individual QR codes as PNG or SVG
+- Download all QR codes as a print-ready page
+- Show/hide public code with copy option
 
 ## Next session starts with
 
-Step 04 — Menu CRUD (Admin Dashboard Editor). Build the menu editor UI: category list, item cards, add/edit/delete modals, drag reorder, availability toggle, image upload.
+Step 06 — Customer Menu (Browsing, Cart, Ordering). Build the customer-facing menu page at /[tenantSlug]/table/[publicCode] with name prompt, category tabs, item cards, cart, order placement, call waiter/request bill, language toggle (AR/FR/EN with RTL).
 
 ## Open questions
 

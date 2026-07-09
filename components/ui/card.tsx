@@ -3,18 +3,22 @@ import { cn } from "@/lib/utils";
 type CardProps = {
   className?: string;
   children: React.ReactNode;
+  onClick?: () => void;
 };
 
-export function Card({ className, children }: CardProps): React.ReactNode {
+export function Card({ className, children, onClick }: CardProps): React.ReactNode {
+  const Component = onClick ? "button" : "div";
   return (
-    <div
+    <Component
+      onClick={onClick}
       className={cn(
-        "rounded-md border border-border bg-surface p-4",
+        "rounded-md border border-border bg-surface p-4 text-left",
+        onClick && "cursor-pointer transition-shadow hover:shadow-md",
         className
       )}
     >
       {children}
-    </div>
+    </Component>
   );
 }
 

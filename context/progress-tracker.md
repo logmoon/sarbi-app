@@ -9,8 +9,8 @@ _Read this at the start of every session before doing anything else. Keep it cur
 | Phase | Status |
 |---|---|
 | Phase 1 — Foundation | ✅ Complete |
-| Phase 2 — Data Layer | 🟡 In progress |
-| Phase 3 — Customer Product | 🔲 Not started |
+| Phase 2 — Data Layer | ✅ Complete |
+| Phase 3 — Customer Product | 🟡 In progress |
 | Phase 4 — Operations | 🔲 Not started |
 | Phase 5 — Management | 🔲 Not started |
 
@@ -29,12 +29,14 @@ _Read this at the start of every session before doing anything else. Keep it cur
 - 03. Database Schema + RLS Policies
 - 04. Menu CRUD (Admin Dashboard Editor)
 - 05. Table Management + QR Code Generation
+- 06. Customer Menu (Browsing, Cart, Ordering)
 
 ---
 
 ## Up Next
 
-06. Customer Menu (Browsing, Cart, Ordering)
+- **06b. Customer Menu UX Polish** — Uniform card layout, 2-column grid, My Orders tab with live Realtime status, server-deduped event state (waiter call + bill request) that persists across devices and reloads, bill request hidden until orders exist, customer name in header, button labels
+- 07. Session Lifecycle + Timeout
 
 ---
 

@@ -115,3 +115,19 @@ export const updateTableSchema = z.object({
 });
 
 export type UpdateTableInput = z.infer<typeof updateTableSchema>;
+
+// --- Customer Menu ---
+
+export const createSessionSchema = z.object({
+  public_code: z.string().length(8),
+  customer_name: z.string().min(1).max(100),
+});
+
+export type CreateSessionInput = z.infer<typeof createSessionSchema>;
+
+export const createTableEventSchema = z.object({
+  session_id: z.string().uuid(),
+  type: z.enum(["waiter_called", "bill_requested", "check_needed"]),
+});
+
+export type CreateTableEventInput = z.infer<typeof createTableEventSchema>;

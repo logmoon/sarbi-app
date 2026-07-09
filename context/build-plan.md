@@ -139,6 +139,31 @@ Foundation first (scaffold, auth, database), then data layer (menu, tables), the
 
 ---
 
+### 06b Customer Menu UX Polish
+
+**UI:**
+
+- Restructure menu item cards to vertical layout (image top, content middle, price+button pinned bottom) with consistent `min-h`, + button pinned to top-right corner
+- Switch items container to 2-column grid (`grid grid-cols-2 gap-3`)
+- Add tab switcher (Menu / My Orders) below page header, replacing the category tabs bar when on My Orders tab
+- Build My Orders tab: list of session orders with items, totals, and color-coded status badges (pending=red, in_progress=yellow, ready=green, delivered=grey)
+- Add Supabase Realtime subscription on `orders` by `session_id` so status changes reflect live
+- Show "Hello, {name}" in header when session is active
+- Add text labels to Call Waiter and Request Bill buttons
+- Hide Request Bill button when session has zero non-cancelled orders
+- Waiter Called state persists across page reload and device: on mount, check for unresolved `waiter_called` / `bill_requested` events for this session and restore visual state
+
+**Logic:**
+
+- **Server-side event dedup:** `POST /api/events` checks for existing pending event of same type for this session before inserting. If unresolved exists, return existing — no duplicate.
+- **New API:** `GET /api/events/check?session_id=X&type=waiter_called` — returns `{ pending: true }` or `{ pending: false }` for state restore on mount
+- **New API:** `GET /api/orders?session_id=xxx` — returns orders + order_items for a session
+- **New hook:** `use-orders.ts` — fetches session orders, subscribes to Realtime UPDATE on `orders` filtered by `session_id`, exposes orders array + loading state
+
+**Exit criteria:** Cards render in a uniform 2-column grid. + button is always in the same spot. Customer sees a "My Orders" tab with live-updating order status. Waiter call and bill request are server-deduped across devices. Bill request is hidden until orders exist. Waiter call state restores on refresh. Customer name visible in header. All three button states are clear at a glance.
+
+---
+
 ### 07 Session Lifecycle + Timeout
 
 **UI:**

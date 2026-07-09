@@ -15,6 +15,15 @@ export function formatPrice(amountInMillimes: number): string {
   }).format(tnd);
 }
 
+export function formatItemPrice(price: number): string {
+  if (!Number.isFinite(price)) return "0.000 TND";
+  return new Intl.NumberFormat("fr-TN", {
+    style: "currency",
+    currency: "TND",
+    minimumFractionDigits: 3,
+  }).format(price);
+}
+
 export function timeAgo(date: Date | string): string {
   const now = new Date();
   const then = typeof date === "string" ? new Date(date) : date;

@@ -9,6 +9,7 @@ type InputProps = {
   placeholder?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   autoComplete?: string;
   dir?: string;
@@ -26,6 +27,7 @@ export function Input({
   placeholder,
   value,
   onChange,
+  onKeyDown,
   disabled,
   autoComplete,
   dir,
@@ -51,6 +53,7 @@ export function Input({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onKeyDown={onKeyDown}
         disabled={disabled}
         autoComplete={autoComplete}
         dir={dir}
