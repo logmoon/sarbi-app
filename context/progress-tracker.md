@@ -19,7 +19,6 @@ _Read this at the start of every session before doing anything else. Keep it cur
 ## In Progress
 
 <!-- What is actively being built right now — update as you go -->
-- 04. Menu CRUD (Admin Dashboard Editor)
 
 ---
 
@@ -28,12 +27,14 @@ _Read this at the start of every session before doing anything else. Keep it cur
 - 01. Project Scaffold + Supabase Setup
 - 02. Supabase Auth + Role System
 - 03. Database Schema + RLS Policies
+- 04. Menu CRUD (Admin Dashboard Editor)
+- 05. Table Management + QR Code Generation
 
 ---
 
 ## Up Next
 
-04. Menu CRUD (Admin Dashboard Editor)
+06. Customer Menu (Browsing, Cart, Ordering)
 
 ---
 

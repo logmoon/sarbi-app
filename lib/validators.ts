@@ -100,3 +100,18 @@ export const reorderCategoriesSchema = z.object({
 export const reorderItemsSchema = z.object({
   items: z.array(z.object({ id: z.string().uuid(), sort_order: z.number().int().min(0) })),
 });
+
+// --- Table CRUD ---
+
+export const createTableSchema = z.object({
+  label: z.string().min(1).max(100),
+});
+
+export type CreateTableInput = z.infer<typeof createTableSchema>;
+
+export const updateTableSchema = z.object({
+  label: z.string().min(1).max(100).optional(),
+  is_active: z.boolean().optional(),
+});
+
+export type UpdateTableInput = z.infer<typeof updateTableSchema>;

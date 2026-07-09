@@ -145,7 +145,7 @@ export function Sidebar() {
           <ul className="space-y-1">
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
-              const isPlaceholder = item.href !== "/dashboard/menu";
+              const isPlaceholder = item.href !== "/dashboard/menu" && item.href !== "/dashboard/tables";
 
               return (
                 <li key={item.href}>

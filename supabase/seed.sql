@@ -111,7 +111,7 @@ VALUES
   );
 
 -- Tables
-INSERT INTO tables (id, tenant_id, location_id, label, public_code, is_active)
+INSERT INTO tables (id, tenant_id, location_id, label, public_code, qr_code_url, is_active)
 VALUES
   (
     'c3d4e5f6-0001-4000-8000-000000000001',
@@ -119,6 +119,7 @@ VALUES
     '11e029ca-d8bf-4817-adae-6af9e757c720',
     'Table 1',
     'a1b2c3d4',
+    'http://localhost:3000/cafe-el-manar/table/a1b2c3d4',
     true
   ),
   (
@@ -127,6 +128,7 @@ VALUES
     '11e029ca-d8bf-4817-adae-6af9e757c720',
     'Table 2',
     'e5f6g7h8',
+    'http://localhost:3000/cafe-el-manar/table/e5f6g7h8',
     true
   ),
   (
@@ -135,6 +137,7 @@ VALUES
     '11e029ca-d8bf-4817-adae-6af9e757c720',
     'Terrasse 1',
     'i9j0k1l2',
+    'http://localhost:3000/cafe-el-manar/table/i9j0k1l2',
     true
   ),
   (
@@ -143,5 +146,6 @@ VALUES
     '11e029ca-d8bf-4817-adae-6af9e757c720',
     'Terrasse 2',
     'm3n4o5p6',
+    'http://localhost:3000/cafe-el-manar/table/m3n4o5p6',
     false
   );
