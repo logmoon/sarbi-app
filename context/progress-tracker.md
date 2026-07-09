@@ -8,8 +8,8 @@ _Read this at the start of every session before doing anything else. Keep it cur
 
 | Phase | Status |
 |---|---|
-| Phase 1 — Foundation | 🟡 In progress |
-| Phase 2 — Data Layer | 🔲 Not started |
+| Phase 1 — Foundation | ✅ Complete |
+| Phase 2 — Data Layer | 🟡 In progress |
 | Phase 3 — Customer Product | 🔲 Not started |
 | Phase 4 — Operations | 🔲 Not started |
 | Phase 5 — Management | 🔲 Not started |
@@ -19,7 +19,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 ## In Progress
 
 <!-- What is actively being built right now — update as you go -->
-- 03. Database Schema + RLS Policies — built, awaiting review
+- 04. Menu CRUD (Admin Dashboard Editor)
 
 ---
 
@@ -27,6 +27,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 
 - 01. Project Scaffold + Supabase Setup
 - 02. Supabase Auth + Role System
+- 03. Database Schema + RLS Policies
 
 ---
 

@@ -1,48 +1,39 @@
-# Memory
+# Memory — Database Schema + RLS Policies
 
-_Last updated: 2026-07-04_
+_Last updated: 2026-07-08_
 
 ---
 
 ## What was built
 
-- **Project scaffold** — Next.js 14, App Router, TypeScript strict mode, Tailwind CSS
-- **Design token system** — All tokens from `ui-tokens.md` wired into `tailwind.config.ts` and `globals.css` as CSS custom properties. Colors, spacing (4px base), radii, shadows, typography all use `var(--color-*)` references.
-- **Fonts** — Inter (latin) + Noto Sans Arabic (arabic) loaded via `next/font/google`, exposed as CSS variables `--font-inter` and `--font-noto-sans-arabic`
-- **Supabase clients** — `lib/supabase/client.ts` (browser, `createBrowserClient`), `server.ts` (server, `createServerClient` with cookie handling), `admin.ts` (service role, bypasses RLS). All use `getEnv()` helper that throws descriptive errors if vars are missing.
-- **Redis client** — `lib/redis.ts` with Upstash, same `getEnv()` pattern
-- **Utilities** — `lib/utils.ts`: `cn()` (clsx + tailwind-merge), `formatPrice()` (TND currency, guards NaN/negatives), `timeAgo()` (handles past and future dates)
-- **Validators** — `lib/validators.ts` with `createOrderSchema` placeholder
-- **Env template** — `.env.local.example` with all 6 required vars
-- **PostCSS** — tailwindcss + autoprefixer
-- **Root page** — `app/page.tsx` redirects to `/login`
-- **Root layout** — `<html>` has `suppressHydrationWarning` for child layout lang override
+- **SQL migrations 005-010** — 9 new tables: `categories`, `items`, `location_item_overrides`, `tables`, `sessions`, `orders`, `order_items`, `table_events`, `analytics_snapshots`
+- **Helper functions** — `get_user_tenant_id()`, `get_user_location_id()` (SECURITY DEFINER for RLS), `check_session_timeout()` (on-access), `update_updated_at_column()` trigger
+- **RLS policies** — on all 12 tables (including retrofitting existing 001-004 tables) covering super_admin, owner, location_manager, kitchen, floor, and anon roles
+- **Seed data** — 3 categories (Café Chaud, Pâtisseries, Jus Frais), 6 items with multi-language names/descriptions, 4 tables with 8-char public_codes
+- **Fixes from review** — CHECK constraint for kitchen/floor location_id NOT NULL, CHECK for public_code length = 8, ON DELETE SET NULL on orders.cancelled_by, consistent type casts, cleaner interval math
 
 ## Decisions made
 
-- Full design token system wired up in step 01 (not deferred) — every downstream feature depends on these tokens
-- No `src/` directory — `app/`, `lib/`, `components/` at project root
-- `getEnv()` pattern for env vars instead of non-null assertions — fails fast with descriptive error
-- `formatPrice` takes millimes (not TND float) — divide by 1000 internally
-- `app/page.tsx` redirects to `/login` — root URL is not a customer-facing route
+- No pg_cron — session timeout enforced on-access via `check_session_timeout()` called by API routes
+- RLS uses helper functions with SECURITY DEFINER (not inline subqueries) to avoid RLS-on-subquery issues
+- Categories/items are tenant-scoped (not location-scoped); location overrides via `location_item_overrides`
+- Status fields use typed ENUMs (order_status, session_status, event_type, event_status)
+- Anon policies allow SELECT on tenants, available categories/items, and tables (needed for customer menu SSR)
 
 ## Problems solved
 
-- `create-next-app` conflicts with existing files — created in `/tmp` then copied over
-- `await cookies()` in Next.js 14 is synchronous — removed unnecessary await
-- Default boilerplate page had wrong font vars (`--font-geist-sans`) — replaced entirely
-- `<html lang="en">` hardcoded — added `suppressHydrationWarning` so child layouts can override for Arabic RTL
-- Missing `@types/qrcode` — installed as devDependency
-- Missing `autoprefixer` in postcss — installed and added to config
+- `auth.uid()` returns `uuid` but `staff.auth_id` is `TEXT` — fixed with explicit `::text` casts in helper functions and policies
+- Existing tables (tenants, locations, staff) had RLS **enabled** but **zero policies** — 010 migration adds policies to all 3 retroactively
+- `check_session_timeout()` uses `session_timeout * interval '1 minute'` instead of string concatenation for interval construction
 
 ## Current state
 
-Step 01 complete. Scaffold builds clean (`npm run build` passes), types check clean (`tsc --noEmit` passes). No runtime code yet — just the foundation layer.
+Step 03 complete. All 12 tables exist with RLS enforced. Seed data populates the dev tenant with menu items and tables. The build passes clean.
 
 ## Next session starts with
 
-Run `/architect` automatically on step 02 (Supabase Auth + Role System) before touching any code. The session protocol requires this as a hard gate — do not skip it.
+Step 04 — Menu CRUD (Admin Dashboard Editor). Build the menu editor UI: category list, item cards, add/edit/delete modals, drag reorder, availability toggle, image upload.
 
 ## Open questions
 
-- None from this session. Step 02 is well-defined in build-plan.md.
+- None from this session.

@@ -93,6 +93,7 @@ Restaurants in Tunisia rely on physical menus (printing, reprinting, laminating)
 - Self-serve billing / Monetique Tunisie integration
 - Native mobile apps
 - Printer integration
+- Self-service signup — V1 is invite-only via staff management
 
 ---
 

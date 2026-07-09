@@ -11,6 +11,10 @@ type InputProps = {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   autoComplete?: string;
+  dir?: string;
+  step?: string;
+  min?: string;
+  max?: string;
 };
 
 export function Input({
@@ -24,6 +28,10 @@ export function Input({
   onChange,
   disabled,
   autoComplete,
+  dir,
+  step,
+  min,
+  max,
 }: InputProps): React.ReactNode {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
@@ -45,6 +53,10 @@ export function Input({
         onChange={onChange}
         disabled={disabled}
         autoComplete={autoComplete}
+        dir={dir}
+        step={step}
+        min={min}
+        max={max}
         className={cn(
           "rounded-sm border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted",
           "focus:outline-none focus:ring-2 focus:ring-border-focus",

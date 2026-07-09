@@ -34,7 +34,6 @@ Foundation first (scaffold, auth, database), then data layer (menu, tables), the
 **UI:**
 
 - Build login page (`/login`) with email + password form
-- Build signup page (`/signup`) with email + password + restaurant name form
 - Build auth layout (centered card, no sidebar)
 
 **Logic:**
@@ -42,10 +41,9 @@ Foundation first (scaffold, auth, database), then data layer (menu, tables), the
 - Create `custom_access_token_hook` PL/pgSQL function that reads role from `staff` table and injects `user_role` claim into JWT
 - Create Next.js middleware that refreshes Supabase session on every request and protects `/dashboard`, `/kds`, `/floor`, `/superadmin` routes
 - Create `lib/supabase/server.ts` helper that returns an authenticated server client
-- Implement signup flow: create auth user → insert staff record with role='owner' → create tenant → create default location
 - Implement login flow: Supabase signInWithPassword → redirect to appropriate dashboard based on role
 
-**Exit criteria:** Owner can sign up, log in, and is redirected to `/dashboard`. Unauthenticated users hitting protected routes are redirected to `/login`. JWT contains `user_role` claim.
+**Exit criteria:** Owner can log in and is redirected to `/dashboard`. Unauthenticated users hitting protected routes are redirected to `/login`. JWT contains `user_role` claim. (Signup is deferred — V1 uses invite-only via staff management.)
 
 ---
 
