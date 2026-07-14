@@ -67,8 +67,14 @@ export function Dialog({
     document.addEventListener("keydown", handleKeyDown);
 
     requestAnimationFrame(() => {
-      const focusable = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-      focusable?.focus();
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const input = dialog.querySelector<HTMLElement>("input:not([disabled]), textarea:not([disabled])");
+      if (input) {
+        input.focus();
+      } else {
+        dialog.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+      }
     });
 
     return () => {

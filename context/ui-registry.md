@@ -150,3 +150,95 @@ Last updated: 2026-07-09
 
 **Pattern notes:**
 Fixed 240px (`w-60`) on desktop, slides in from left on mobile with backdrop. Active nav item uses accent bg with white text. Inactive items use secondary text color. Routes not yet built show "Soon" badge. Mobile hamburger toggles visibility.
+
+### MenuItemCard
+
+File: `components/customer/menu-item-card.tsx`
+Last updated: 2026-07-09
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Background       | `bg-surface` (via Card) |
+| Border           | `border border-border` (via Card) |
+| Border radius    | `rounded-md` (via Card) |
+| Layout           | `flex gap-3 cursor-pointer` (horizontal: thumbnail | content) |
+| Image container  | `h-20 w-20 flex-shrink-0 overflow-hidden rounded-md` |
+| Item name        | `text-sm font-semibold text-text-primary` |
+| Item description | `text-xs text-text-secondary line-clamp-2` |
+| Price            | `text-sm font-semibold text-accent` |
+| Add button       | `h-8 w-8 rounded-full bg-accent text-white hover:bg-accent-hover` |
+| Unavailable dim  | `opacity-60` |
+| Hover state      | `hover:shadow-md` (via Card onClick) |
+
+**Pattern notes:**
+MenuItemCard is the customer-facing menu item. Horizontal layout with optional 80×80 image thumbnail on the left. Price and + button are in a `justify-between` row at the bottom of the text column. The + button is always a circular 32×32 accent button. Unavailable items are dimmed 60%.
+
+### CategoryTabs
+
+File: `components/customer/category-tabs.tsx`
+Last updated: 2026-07-09
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `sticky top-0 z-20 border-b border-border bg-background` |
+| Tab wrapper      | `flex gap-2 overflow-x-auto px-4 py-3` |
+| Tab active       | `bg-accent text-white` |
+| Tab inactive     | `bg-surface text-text-secondary hover:text-text-primary border border-border` |
+| Tab              | `whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors` |
+
+**Pattern notes:**
+Horizontal scrollable pill tabs. Active tab uses accent bg with white text. Inactive tabs are white with border. No shadow. Sticky below the page header so categories remain accessible while scrolling.
+
+### LanguageToggle
+
+File: `components/customer/language-toggle.tsx`
+Last updated: 2026-07-09
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5` |
+| Active locale    | `bg-accent text-white rounded-md px-2.5 py-1 text-xs font-medium` |
+| Inactive locale  | `text-text-secondary hover:text-text-primary rounded-md px-2.5 py-1 text-xs font-medium` |
+
+**Pattern notes:**
+Compact 3-language toggle (AR/FR/EN) in the page header. Inline-flex with segmented-control styling. Active locale uses accent fill.
+
+### ActionButtons (waiter call + bill request)
+
+File: `components/customer/action-buttons.tsx`
+Last updated: 2026-07-09
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `fixed bottom-4 right-4 z-20 flex flex-col items-end gap-2` |
+| Button shape     | `h-12 w-12 rounded-full p-0 shadow-md` |
+| Call Waiter      | `variant="ghost"` (icon only) |
+| Request Bill     | `variant="secondary"` (icon only) |
+| Error toast      | `bg-status-error/10 px-3 py-2 text-xs text-status-error rounded-md shadow-md` |
+
+**Pattern notes:**
+Two floating circle buttons in the bottom-right corner. Waiter call uses ghost variant (transparent bg), bill request uses secondary variant (white bg with border). Both are 48×48 for touch target. An error toast appears above the buttons on failure. The entire block is hidden when there is no active session.
+
+### Cart Drawer
+
+File: `components/customer/cart-drawer.tsx`
+Last updated: 2026-07-09
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Floating button  | `fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-accent px-6 py-3 text-white shadow-lg` |
+| Drawer           | `fixed inset-x-0 bottom-0 flex flex-col rounded-t-xl bg-surface shadow-lg` |
+| Drawer max height| `max-h-[80vh]` |
+| Drawer header    | `flex items-center justify-between border-b border-border px-4 py-3` |
+| Item name        | `text-sm font-medium text-text-primary` |
+| Item price       | `text-xs text-text-muted` |
+| Item notes       | `text-xs italic text-text-secondary` |
+| Quantity ctrl    | `h-6 w-6 rounded-full border border-border text-text-secondary` |
+| Remove button    | `p-1 text-text-muted hover:text-status-error` |
+| Clear button     | `text-xs text-status-error hover:underline` |
+| Total            | `text-sm font-semibold text-text-primary` |
+| Place Order btn  | Primary Button variant |
+| Overlay          | `fixed inset-0 z-30 bg-black/30` |
+
+**Pattern notes:**
+Bottom sheet drawer for cart review. Triggered by a floating accent pill showing count + total. Drawer slides up from bottom with overlay backdrop. Quantity controls are 24×24 circular buttons with min/max/remove. Place Order is in the sticky bottom footer area with an optional notes input.

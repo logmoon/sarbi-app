@@ -131,3 +131,10 @@ export const createTableEventSchema = z.object({
 });
 
 export type CreateTableEventInput = z.infer<typeof createTableEventSchema>;
+
+export const cancelOrderSchema = z.object({
+  session_id: z.string().uuid(),
+  reason: z.string().max(200).optional(),
+});
+
+export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;

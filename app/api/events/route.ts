@@ -60,9 +60,37 @@ export async function POST(request: Request) {
     );
   }
 
+  if (type === "waiter_called" || type === "bill_requested") {
+    const { data: existing } = await admin
+      .from("table_events")
+      .select("id, metadata")
+      .eq("tenant_id", session.tenant_id)
+      .eq("session_id", session.id)
+      .eq("type", type)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({ data: existing }, { status: 200 });
+    }
+  }
+
   const metadata: Record<string, unknown> = {};
 
   if (type === "bill_requested") {
+    const { data: deliveredOrders } = await admin
+      .from("orders")
+      .select("id")
+      .eq("session_id", session.id)
+      .eq("status", "delivered");
+
+    if (!deliveredOrders || deliveredOrders.length === 0) {
+      return NextResponse.json(
+        { error: "No delivered orders to bill", code: "NO_DELIVERED_ORDERS" },
+        { status: 400 }
+      );
+    }
+
     const { data: orders } = await admin
       .from("orders")
       .select("id")

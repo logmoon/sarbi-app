@@ -28,13 +28,13 @@ export function MenuItemCard({
   return (
     <Card
       className={cn(
-        "flex cursor-pointer gap-3 transition-shadow hover:shadow-md",
+        "flex min-h-[230px] cursor-pointer flex-col overflow-hidden transition-shadow hover:shadow-md",
         !item.is_available && "opacity-60"
       )}
       onClick={() => onClick(item)}
     >
       {item.image_url && (
-        <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
+        <div className="h-28 w-full flex-shrink-0 overflow-hidden">
           <img
             src={item.image_url}
             alt={name}
@@ -42,7 +42,7 @@ export function MenuItemCard({
           />
         </div>
       )}
-      <div className="flex min-w-0 flex-1 flex-col justify-between">
+      <div className="flex flex-1 flex-col justify-between p-3">
         <div>
           <h3 className="text-sm font-semibold text-text-primary">{name}</h3>
           {desc && (
@@ -51,7 +51,7 @@ export function MenuItemCard({
             </p>
           )}
         </div>
-        <div className="mt-1 flex items-center justify-between">
+        <div className="mt-2 flex items-center justify-between">
           <span className="text-sm font-semibold text-accent">
             {formatItemPrice(item.price)}
           </span>

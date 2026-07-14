@@ -18,7 +18,7 @@ export function CategoryTabs({
   locale,
 }: CategoryTabsProps) {
   return (
-    <div className="sticky top-0 z-20 border-b border-border bg-background">
+    <div className="border-b border-border bg-background">
       <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide">
         {categories.map((cat) => (
           <button

@@ -164,6 +164,26 @@ Foundation first (scaffold, auth, database), then data layer (menu, tables), the
 
 ---
 
+---
+
+### 06c App-wide i18n
+
+**UI:**
+
+- Create `lib/i18n.ts` with a shared label lookup keyed by locale + key, covering all customer-facing UI text across the entire app (customer menu, KDS, floor app, admin dashboard, super admin)
+- Replace all inline label objects and hardcoded English strings with `t(locale, 'key')` calls
+- Status labels, button text, headers, empty states, error toasts, form labels, nav items
+
+**Logic:**
+
+- Simple object map: `const labels: Record<Locale, Record<string, string>>` with keys like `'menu.tab'`, `'orders.tab'`, `'call_waiter'`, `'request_bill'`, `'hello_name'`, `'order.pending'`, `'order.in_progress'`, `'order.ready'`, `'order.delivered'`, `'order.cancelled'`, `'no_orders'`, etc.
+- Export `t(locale, key, params?)` function with optional interpolation for dynamic values like `{name}`
+- AR, FR, EN for every key
+
+**Exit criteria:** No hardcoded English UI strings anywhere in the app. All customer-facing text uses `t()` from `lib/i18n.ts`. Arabic and French speakers see the full app in their language.
+
+---
+
 ### 07 Session Lifecycle + Timeout
 
 **UI:**

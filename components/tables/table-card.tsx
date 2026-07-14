@@ -13,6 +13,7 @@ export type TableData = {
   qr_code_url: string | null;
   is_active: boolean;
   has_active_session: boolean;
+  location_id: string;
 };
 
 type TableCardProps = {

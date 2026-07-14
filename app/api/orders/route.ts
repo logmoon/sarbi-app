@@ -1,6 +1,48 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrderSchema } from "@/lib/validators";
+
+export async function GET(request: NextRequest) {
+  const sessionId = request.nextUrl.searchParams.get("session_id");
+
+  if (!sessionId) {
+    return NextResponse.json(
+      { error: "Missing session_id", code: "VALIDATION_ERROR" },
+      { status: 400 }
+    );
+  }
+
+  const admin = createAdminClient();
+
+  const { data: session, error: sessionErr } = await admin
+    .from("sessions")
+    .select("tenant_id")
+    .eq("id", sessionId)
+    .single();
+
+  if (sessionErr || !session) {
+    return NextResponse.json(
+      { error: "Session not found", code: "NOT_FOUND" },
+      { status: 404 }
+    );
+  }
+
+  const { data: orders, error } = await admin
+    .from("orders")
+    .select("*, order_items(*)")
+    .eq("tenant_id", session.tenant_id)
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch orders", code: "DB_ERROR" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ data: orders ?? [] });
+}
 
 export async function POST(request: Request) {
   const body = await request.json();

@@ -32,7 +32,11 @@ export function useSession(publicCode: string) {
       const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "restore", session_id: cookieId }),
+        body: JSON.stringify({
+          action: "restore",
+          session_id: cookieId,
+          public_code: publicCode,
+        }),
       });
       const json = await res.json();
       if (res.ok && json.data) {
@@ -55,7 +59,7 @@ export function useSession(publicCode: string) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [publicCode]);
 
   const checkForActiveSession = useCallback(async () => {
     setLoading(true);

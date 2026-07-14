@@ -30,12 +30,13 @@ _Read this at the start of every session before doing anything else. Keep it cur
 - 04. Menu CRUD (Admin Dashboard Editor)
 - 05. Table Management + QR Code Generation
 - 06. Customer Menu (Browsing, Cart, Ordering)
+- 06b. Customer Menu UX Polish — Vertical card layout, 2-column grid, My Orders tab with live Realtime, server-deduped event state, text-labeled action buttons, bill request hidden until orders exist, customer name in header
 
 ---
 
 ## Up Next
 
-- **06b. Customer Menu UX Polish** — Uniform card layout, 2-column grid, My Orders tab with live Realtime status, server-deduped event state (waiter call + bill request) that persists across devices and reloads, bill request hidden until orders exist, customer name in header, button labels
+- **06c. App-wide i18n** — Shared `lib/i18n.ts` lookup with AR/FR/EN for every UI string across the entire app
 - 07. Session Lifecycle + Timeout
 
 ---

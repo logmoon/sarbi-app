@@ -6,6 +6,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TableCard, type TableData } from "@/components/tables/table-card";
 import { AddTableDialog } from "@/components/tables/add-table-dialog";
 import { EditTableDialog } from "@/components/tables/edit-table-dialog";
+import { createClient } from "@/lib/supabase/client";
 
 type ApiErrorResponse = { error: string; code?: string };
 
@@ -20,6 +21,7 @@ export function TablesManager() {
 
   const tablesRef = useRef(tables);
   tablesRef.current = tables;
+  const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
 
   const fetchTables = useCallback(async () => {
     try {
@@ -40,6 +42,45 @@ export function TablesManager() {
   useEffect(() => {
     fetchTables();
   }, [fetchTables]);
+
+  useEffect(() => {
+    if (channelRef.current) return;
+    if (tables.length === 0) return;
+
+    const locationId = tables[0].location_id;
+    const setUpChannel = async () => {
+      const supabase = createClient();
+      await supabase.auth.getSession();
+      const channel = supabase
+        .channel(`tables-location-${locationId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "sessions",
+            filter: `location_id=eq.${locationId}`,
+          },
+          () => {
+            fetchTables();
+          }
+        )
+        .subscribe();
+
+      channelRef.current = channel;
+    };
+
+    setUpChannel();
+
+    return () => {
+      if (channelRef.current) {
+        const supabase = createClient();
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tables.length > 0 && tables[0]?.location_id]);
 
   const handleAdd = async (label: string) => {
     const res = await fetch("/api/tables", {

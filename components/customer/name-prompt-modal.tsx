@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export function NamePromptModal({
 }: NamePromptModalProps) {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const noop = useCallback(() => {}, []);
 
   function handleSubmit() {
     const trimmed = name.trim();
@@ -39,7 +40,7 @@ export function NamePromptModal({
   }
 
   return (
-    <Dialog open={open} onClose={() => {}} title={title}>
+    <Dialog open={open} onClose={noop} title={title}>
       <Input
         label={title}
         placeholder={placeholder}

@@ -61,6 +61,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (public_code) {
+      const { table, error: tableErr } = await getTable(admin, public_code);
+      if (tableErr) return tableErr;
+
+      if (session.table_id !== table.id) {
+        return NextResponse.json(
+          { error: "Session does not belong to this table", code: "SESSION_TABLE_MISMATCH" },
+          { status: 404 }
+        );
+      }
+    }
+
     const sessionTimeout = await getLocationTimeout(admin, session.location_id);
 
     return NextResponse.json({
@@ -127,10 +139,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (existing.table_id !== table.id) {
+      return NextResponse.json(
+        { error: "Session does not belong to this table", code: "SESSION_TABLE_MISMATCH" },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json({
       data: {
         id: existing.id,
-        table_id: existing.table_id,
+        table_id: table.id,
         location_id: table.location_id,
         tenant_id: table.tenant_id,
         customer_name: existing.customer_name,
@@ -146,57 +165,62 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-  }
 
-  const { data: existingActive } = await admin
-    .from("sessions")
-    .select("id, customer_name")
-    .eq("table_id", table.id)
-    .eq("status", "active")
-    .maybeSingle();
+    const { data: existingActive } = await admin
+      .from("sessions")
+      .select("id, customer_name")
+      .eq("table_id", table.id)
+      .eq("status", "active")
+      .maybeSingle();
 
-  if (existingActive) {
-    return NextResponse.json({
-      data: {
-        id: existingActive.id,
-        table_id: table.id,
-        location_id: table.location_id,
+    if (existingActive) {
+      return NextResponse.json({
+        data: {
+          id: existingActive.id,
+          table_id: table.id,
+          location_id: table.location_id,
+          tenant_id: table.tenant_id,
+          customer_name: existingActive.customer_name,
+          session_timeout: sessionTimeout,
+        },
+      });
+    }
+
+    const { data: newSession, error: createErr } = await admin
+      .from("sessions")
+      .insert({
         tenant_id: table.tenant_id,
-        customer_name: existingActive.customer_name,
-        session_timeout: sessionTimeout,
-      },
-    });
-  }
+        location_id: table.location_id,
+        table_id: table.id,
+        customer_name: customer_name || null,
+      })
+      .select()
+      .single();
 
-  const { data: newSession, error: createErr } = await admin
-    .from("sessions")
-    .insert({
-      tenant_id: table.tenant_id,
-      location_id: table.location_id,
-      table_id: table.id,
-      customer_name: customer_name || null,
-    })
-    .select()
-    .single();
+    if (createErr) {
+      return NextResponse.json(
+        { error: "Failed to create session", code: "DB_ERROR" },
+        { status: 500 }
+      );
+    }
 
-  if (createErr) {
     return NextResponse.json(
-      { error: "Failed to create session", code: "DB_ERROR" },
-      { status: 500 }
+      {
+        data: {
+          id: newSession.id,
+          table_id: newSession.table_id,
+          location_id: newSession.location_id,
+          tenant_id: newSession.tenant_id,
+          customer_name: newSession.customer_name,
+          session_timeout: sessionTimeout,
+        },
+      },
+      { status: 201 }
     );
   }
 
   return NextResponse.json(
-    {
-      data: {
-        id: newSession.id,
-        table_id: newSession.table_id,
-        location_id: newSession.location_id,
-        tenant_id: newSession.tenant_id,
-        customer_name: newSession.customer_name,
-        session_timeout: sessionTimeout,
-      },
-    },
-    { status: 201 }
+    { error: "Unknown action", code: "VALIDATION_ERROR" },
+    { status: 400 }
   );
 }
