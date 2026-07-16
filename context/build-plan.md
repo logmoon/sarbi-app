@@ -189,17 +189,22 @@ Foundation first (scaffold, auth, database), then data layer (menu, tables), the
 **UI:**
 
 - Build "Are you with [name]?" confirmation prompt (when active session exists and customer has no cookie)
-- Build session active indicator (subtle UI element showing current session)
+- Build session active indicator (subtle UI element showing current session) — customer name shown in header
+- Build blocked state for declined sessions (full-screen message + "Try Again", `components/customer/full-screen-message.tsx`)
 
 **Logic:**
 
-- Session creation: on first scan of a table with no active session, create session record
+- Session creation: on first scan of a table with no active (and non-expired) session, create session record
 - Session joining: on "Yes" to "Are you with [name]?", join existing session (customer gets own name for order attribution)
-- Session mismatch: on "No", insert `check_needed` table_event, let customer into menu under existing session
-- Session timeout: database function or cron job that closes sessions older than location's `session_timeout` (default 150 min) with `closed_by = 'timeout'`
+- Session mismatch: on "No", insert `check_needed` table_event and **block** the scanner from ordering — do NOT join them into the existing session. An earlier revision of this flow joined them anyway (to avoid a dead end), but that risks merging two unrelated parties' orders/bill, which is worse than the ambiguity. The block is resolved by **Clear Table** (a slice of Task 09, pulled forward — see below), or by timeout.
+- Session timeout: no cron job — checked lazily every time a session is looked up (`check_table`, `create`, `join`, `restore`, plus order/event creation), and closed with `closed_by = 'timeout'` the moment it's found to be stale. This means a table with zero activity after timeout stays "active" in the DB until the next lookup touches it, but no code path ever treats a stale session as live.
 - Cookie-based session identification: store session_id in a cookie, check on subsequent visits
+- Realtime: `sessions`, `orders`, `order_items`, `table_events` added to the `supabase_realtime` publication with `REPLICA IDENTITY FULL` (`supabase/migrations/015_enable_realtime.sql`) — required in addition to RLS for `postgres_changes` subscriptions to fire at all
+- Race safety: partial unique index `sessions(table_id) WHERE status='active'` (`supabase/migrations/016_one_active_session_per_table.sql`) prevents two concurrent scans from creating duplicate active sessions; `create` action catches the conflict and returns the winning session instead of erroring
 
-**Exit criteria:** New scan on idle table creates session. New scan on active table shows confirmation. "Yes" joins, "No" creates check_needed event. Sessions auto-close after timeout. Returning customer with cookie skips name prompt.
+**Pulled forward from Task 09 (Floor Staff App):** `DELETE /api/sessions/[id]` force-closes a session ("Clear Table"), since the block above needs a real resolution path and the floor app doesn't exist yet. Currently exposed as a button on the owner/manager Tables dashboard (`components/tables/table-card.tsx` + `tables-manager.tsx`) rather than the floor feed. When Task 09 is built, move/duplicate this there.
+
+**Exit criteria:** New scan on idle table creates session. New scan on active table shows confirmation. "Yes" joins. "No" blocks with a check_needed event, and staff clearing the table (or timeout) unblocks it. Sessions auto-close on next access after timeout. Returning customer with cookie skips name prompt.
 
 ---
 
@@ -228,6 +233,8 @@ Foundation first (scaffold, auth, database), then data layer (menu, tables), the
 ---
 
 ### 09 Floor Staff App (Live Feed + Session History)
+
+> **Status:** `DELETE /api/sessions/[id]` and a "Clear Table" button already exist (pulled forward into Task 07, since the "Are you with [name]? → No" block needed a real resolution path before this task's turn came up). The button currently lives on the owner/manager Tables dashboard, not this app. Building this task means giving floor staff their own live feed/session-history UI — the underlying clear-table logic doesn't need to be rebuilt, just surfaced here too (and optionally removed from the dashboard once this exists).
 
 **UI:**
 

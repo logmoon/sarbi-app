@@ -107,12 +107,12 @@ Last updated: 2026-07-09
 | Actions          | Cancel (secondary) + Confirm (danger variant) |
 
 **Pattern notes:**
-Specialization of Dialog for delete/destructive confirmations. Accepts `variant` prop (danger or primary) to toggle button style. Loading state shows "Deleting..." on confirm button.
+Specialization of Dialog for delete/destructive confirmations. Accepts `variant` prop (danger or primary) to toggle button style. Loading state shows `loadingLabel` on the confirm button (defaults to "Deleting..." — pass a specific one for non-delete destructive actions, e.g. "Clearing..." for Clear Table).
 
 ### TableCard
 
 File: `components/tables/table-card.tsx`
-Last updated: 2026-07-09
+Last updated: 2026-07-15
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
@@ -128,9 +128,10 @@ Last updated: 2026-07-09
 | Code toggle      | `text-xs text-text-muted hover:text-text-secondary` |
 | Code text        | `font-mono text-xs text-text-muted` |
 | Inactive dim     | `opacity-60` |
+| Clear Table btn  | `Button variant="danger"`, `mb-2 w-full text-xs`, shown only when occupied |
 
 **Pattern notes:**
-TableCard has three visual states derived from `is_active` + `has_active_session`: occupied (green border + badge), available (default), inactive (muted border + 60% opacity). Uses the project's status-border convention (4px left border) from ui-rules.md. QR preview uses inline SVG (no canvas), with a subtle show/hide toggle for the public code.
+TableCard has three visual states derived from `is_active` + `has_active_session`: occupied (green border + badge), available (default), inactive (muted border + 60% opacity). Uses the project's status-border convention (4px left border) from ui-rules.md. QR preview uses inline SVG (no canvas), with a subtle show/hide toggle for the public code. When occupied, a full-width danger "Clear Table" button appears above the download row, calling `onClearTable(table)` — the parent (`TablesManager`) owns the confirmation dialog, matching the existing edit/delete pattern. Needs `table.active_session_id` (from `GET /api/tables`) to know which session to close.
 
 ### Sidebar
 
@@ -218,6 +219,21 @@ Last updated: 2026-07-09
 
 **Pattern notes:**
 Two floating circle buttons in the bottom-right corner. Waiter call uses ghost variant (transparent bg), bill request uses secondary variant (white bg with border). Both are 48×48 for touch target. An error toast appears above the buttons on failure. The entire block is hidden when there is no active session.
+
+### FullScreenMessage
+
+File: `components/customer/full-screen-message.tsx`
+Last updated: 2026-07-15
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `flex min-h-screen items-center justify-center bg-background px-4` |
+| Title            | `text-xl font-semibold text-text-primary` |
+| Description      | `mt-2 text-sm text-text-secondary` |
+| Action button    | `mt-6`, default Button variant |
+
+**Pattern notes:**
+Full-page takeover for customer states where the menu itself can't be shown: inactive table (SSR, `app/(public)/[tenantSlug]/table/[publicCode]/page.tsx`) and blocked session after declining "Are you with [name]?" (client, `customer-shell.tsx`). No `"use client"` directive — safe to render from a server component directly. Takes an optional `action: { label, onClick }` for a retry affordance; omit for a terminal state with no next step. Reuse this instead of writing another one-off centered-message block — it was extracted specifically because that pattern already existed twice.
 
 ### Cart Drawer
 

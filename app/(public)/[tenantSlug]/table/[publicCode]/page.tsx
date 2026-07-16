@@ -5,6 +5,7 @@ export const fetchCache = "force-no-store";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CustomerShell } from "@/components/customer/customer-shell";
+import { FullScreenMessage } from "@/components/customer/full-screen-message";
 
 type PageProps = {
   params: Promise<{ tenantSlug: string; publicCode: string }>;
@@ -51,17 +52,10 @@ export default async function CustomerMenuPage({ params }: PageProps) {
 
   if (!table.is_active) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-text-primary">
-            Table Unavailable
-          </h1>
-          <p className="mt-2 text-sm text-text-secondary">
-            This table is currently inactive. Please ask a staff member for
-            assistance.
-          </p>
-        </div>
-      </div>
+      <FullScreenMessage
+        title="Table Unavailable"
+        description="This table is currently inactive. Please ask a staff member for assistance."
+      />
     );
   }
 

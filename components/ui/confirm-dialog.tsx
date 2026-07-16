@@ -8,6 +8,7 @@ type ConfirmDialogProps = {
   title: string;
   message: string;
   confirmLabel?: string;
+  loadingLabel?: string;
   variant?: "danger" | "primary";
   loading?: boolean;
 };
@@ -19,6 +20,7 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel = "Delete",
+  loadingLabel = "Deleting...",
   variant = "danger",
   loading,
 }: ConfirmDialogProps) {
@@ -38,7 +40,7 @@ export function ConfirmDialog({
           onClick={onConfirm}
           disabled={loading}
         >
-          {loading ? "Deleting..." : confirmLabel}
+          {loading ? loadingLabel : confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>

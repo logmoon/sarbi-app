@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-async function getTable(admin: ReturnType<typeof createAdminClient>, publicCode: string) {
+type AdminClient = ReturnType<typeof createAdminClient>;
+
+const UNIQUE_VIOLATION = "23505";
+
+async function getTable(admin: AdminClient, publicCode: string) {
   const { data: table, error } = await admin
     .from("tables")
     .select("id, location_id, tenant_id, is_active")
@@ -25,7 +29,7 @@ async function getTable(admin: ReturnType<typeof createAdminClient>, publicCode:
   return { table, error: null };
 }
 
-async function getLocationTimeout(admin: ReturnType<typeof createAdminClient>, locationId: string) {
+async function getLocationTimeout(admin: AdminClient, locationId: string) {
   const { data: location } = await admin
     .from("locations")
     .select("session_timeout")
@@ -33,6 +37,48 @@ async function getLocationTimeout(admin: ReturnType<typeof createAdminClient>, l
     .single();
 
   return location?.session_timeout ?? 150;
+}
+
+function isExpired(startedAt: string, timeoutMinutes: number) {
+  const elapsed = Date.now() - new Date(startedAt).getTime();
+  return elapsed > timeoutMinutes * 60 * 1000;
+}
+
+async function closeSessionAsTimedOut(admin: AdminClient, sessionId: string) {
+  await admin
+    .from("sessions")
+    .update({ status: "closed", closed_at: new Date().toISOString(), closed_by: "timeout" })
+    .eq("id", sessionId);
+}
+
+/**
+ * Returns the active session for a table, or null if there isn't one.
+ * If an "active" session is found but has exceeded the location's timeout,
+ * it is lazily closed here and treated as if it didn't exist — this is what
+ * previously only happened when an order/event was placed on that specific
+ * session, which meant a fresh scan of the same table could surface a
+ * long-departed customer's stale session as "active".
+ */
+async function getLiveActiveSession(
+  admin: AdminClient,
+  tableId: string,
+  timeoutMinutes: number
+) {
+  const { data: existing } = await admin
+    .from("sessions")
+    .select("id, customer_name, table_id, started_at")
+    .eq("table_id", tableId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!existing) return null;
+
+  if (isExpired(existing.started_at, timeoutMinutes)) {
+    await closeSessionAsTimedOut(admin, existing.id);
+    return null;
+  }
+
+  return existing;
 }
 
 export async function POST(request: NextRequest) {
@@ -50,11 +96,21 @@ export async function POST(request: NextRequest) {
 
     const { data: session, error: sessErr } = await admin
       .from("sessions")
-      .select("id, tenant_id, location_id, table_id, customer_name, status")
+      .select("id, tenant_id, location_id, table_id, customer_name, status, started_at")
       .eq("id", session_id)
       .single();
 
     if (sessErr || !session || session.status !== "active") {
+      return NextResponse.json(
+        { error: "Session not found or expired", code: "SESSION_INACTIVE" },
+        { status: 404 }
+      );
+    }
+
+    const sessionTimeout = await getLocationTimeout(admin, session.location_id);
+
+    if (isExpired(session.started_at, sessionTimeout)) {
+      await closeSessionAsTimedOut(admin, session.id);
       return NextResponse.json(
         { error: "Session not found or expired", code: "SESSION_INACTIVE" },
         { status: 404 }
@@ -72,8 +128,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
-    const sessionTimeout = await getLocationTimeout(admin, session.location_id);
 
     return NextResponse.json({
       data: {
@@ -100,16 +154,13 @@ export async function POST(request: NextRequest) {
   const sessionTimeout = await getLocationTimeout(admin, table.location_id);
 
   if (action === "check_table") {
-    const { data: existing } = await admin
-      .from("sessions")
-      .select("id, customer_name")
-      .eq("table_id", table.id)
-      .eq("status", "active")
-      .maybeSingle();
+    const existing = await getLiveActiveSession(admin, table.id, sessionTimeout);
 
     return NextResponse.json({
       data: {
-        existing_session: existing ?? null,
+        existing_session: existing
+          ? { id: existing.id, customer_name: existing.customer_name }
+          : null,
         table_id: table.id,
         location_id: table.location_id,
         tenant_id: table.tenant_id,
@@ -127,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     const { data: existing } = await admin
       .from("sessions")
-      .select("id, customer_name, table_id")
+      .select("id, customer_name, table_id, started_at")
       .eq("id", session_id)
       .eq("status", "active")
       .single();
@@ -143,6 +194,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Session does not belong to this table", code: "SESSION_TABLE_MISMATCH" },
         { status: 400 }
+      );
+    }
+
+    if (isExpired(existing.started_at, sessionTimeout)) {
+      await closeSessionAsTimedOut(admin, existing.id);
+      return NextResponse.json(
+        { error: "Session not found or already closed", code: "SESSION_INACTIVE" },
+        { status: 404 }
       );
     }
 
@@ -166,12 +225,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: existingActive } = await admin
-      .from("sessions")
-      .select("id, customer_name")
-      .eq("table_id", table.id)
-      .eq("status", "active")
-      .maybeSingle();
+    const existingActive = await getLiveActiveSession(admin, table.id, sessionTimeout);
 
     if (existingActive) {
       return NextResponse.json({
@@ -198,6 +252,28 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createErr) {
+      // Another request created the active session for this table in the
+      // window between our check above and this insert (e.g. two people at
+      // the same table scanning within milliseconds of each other). The
+      // partial unique index on sessions(table_id) WHERE status='active'
+      // rejects our insert — fetch and hand back the session that won the
+      // race instead of surfacing an error.
+      if (createErr.code === UNIQUE_VIOLATION) {
+        const winner = await getLiveActiveSession(admin, table.id, sessionTimeout);
+        if (winner) {
+          return NextResponse.json({
+            data: {
+              id: winner.id,
+              table_id: table.id,
+              location_id: table.location_id,
+              tenant_id: table.tenant_id,
+              customer_name: winner.customer_name,
+              session_timeout: sessionTimeout,
+            },
+          });
+        }
+      }
+
       return NextResponse.json(
         { error: "Failed to create session", code: "DB_ERROR" },
         { status: 500 }

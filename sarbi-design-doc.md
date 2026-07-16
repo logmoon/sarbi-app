@@ -365,7 +365,7 @@ Session OPEN
   → Multiple orders can be placed within the session
   → Waiter calls and bill requests are logged to the session
 Session CLOSED
-  → Staff taps "Clear table" in floor staff app
+  → Staff taps "Clear table" (dashboard Tables page for now — moves to the floor staff app once built, see section 9)
   → OR session auto-closes after [timeout] minutes of zero activity
 ```
 
@@ -377,9 +377,9 @@ The system checks the session status. If the previous session is closed (staff c
 If the session is still active (staff forgot to clear, or genuinely a new arrival at a table someone else is still sitting at), the scanner sees a confirmation prompt before landing on the menu: **"Are you with [customer_name]?"** — Yes / No.
 
 - **Yes** → they join the existing session as before. If they have no session cookie (new device), they're still asked their own name so their individual orders are attributed correctly, even though they share the session.
-- **No** → the platform still can't cleanly split one table into two concurrent sessions (see [Split Sessions](#17-future-considerations) below for why), so this doesn't create a second session. Instead, it silently logs a `check_needed` table event and lets them into the menu under the existing session. The floor staff app surfaces this as a distinct alert ("Table 7 may need checking — new scan doesn't match current guest") so a human resolves whatever's actually going on: table wasn't cleared, two separate parties are sharing one table, etc. This turns a previously-invisible failure mode into a visible one without requiring a bigger data model change.
+- **No** → the platform still can't cleanly split one table into two concurrent sessions (see [Split Sessions](#17-future-considerations) below for why), so this doesn't create a second session either. Earlier revisions of this flow folded a "No" answer into the existing session anyway (just with a staff alert) to avoid leaving the scanner with nothing to do — but that meant two unrelated parties' orders and bill could still end up merged, which is worse than the ambiguity it was trying to solve. Instead, "No" logs a `check_needed` table event and blocks the scanner from ordering, showing a "we've let staff know, try again shortly" screen rather than the menu. **Clear table** (below) is what unblocks it — either the specific staff action or the timeout.
 
-This entirely replaces the old silent-merge behavior — a mismatched scan is now always flagged to staff rather than quietly folded into the wrong bill.
+This entirely replaces the old silent-merge behavior — a mismatched scan is now always flagged to staff, and never quietly folded into a bill it doesn't belong to, in either direction.
 
 **Session ID in URL:**
 The customer URL does not expose the session ID. Session binding happens server-side when the customer submits their name and the system checks for an active session on that table.
@@ -676,6 +676,8 @@ When the feed is empty: a clean "All clear" state. No pending actions.
 A secondary tab shows all active sessions, their order histories, and each session's running total (same computed value as on the `BILL REQUESTED` card) — useful both for context if a customer has a question about their order status, and for staff to check a table's total proactively even before a bill is formally requested.
 
 **Clear Table** button is accessible per table in this secondary view. Tapping it prompts a single confirmation: "Close session for Table 7?" → Yes / No.
+
+> **Status:** `DELETE /api/sessions/[id]` (the close-session action this button calls) and a Clear Table button exist today, pulled forward from this task since the "Are you with [name]? → No" flow (section 7) needed a real resolution path. It currently lives on the owner/manager Tables dashboard rather than this feed, since the feed itself isn't built yet. When this section is implemented, move the button here and retire the dashboard one (or keep both — dashboard for a quick global glance, feed for the floor workflow). Note also that `CHECK TABLE` is no longer purely informational: the customer who triggered it is blocked from ordering until this is resolved, not just quietly seated under the existing session, so treat these as higher-urgency than the description above implies.
 
 ---
 

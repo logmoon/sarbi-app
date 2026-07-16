@@ -18,6 +18,8 @@ export function TablesManager() {
   const [editingTable, setEditingTable] = useState<TableData | null>(null);
   const [deleteTableId, setDeleteTableId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [clearTarget, setClearTarget] = useState<TableData | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   const tablesRef = useRef(tables);
   tablesRef.current = tables;
@@ -128,6 +130,29 @@ export function TablesManager() {
       setError(err.error ?? "Failed to delete table");
     }
     setDeleting(false);
+  };
+
+  // Force-closes the table's active session so it becomes available again.
+  // This is the resolution path for the blocked "Are you with [name]? -> No"
+  // customer state — see app/api/sessions/[id]/route.ts.
+  const handleClearTable = async () => {
+    if (!clearTarget?.active_session_id) return;
+    setClearing(true);
+    try {
+      const res = await fetch(`/api/sessions/${clearTarget.active_session_id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err: ApiErrorResponse = await res.json();
+        throw new Error(err.error);
+      }
+      setClearTarget(null);
+      await fetchTables();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear table");
+    } finally {
+      setClearing(false);
+    }
   };
 
   const handleDownloadAll = () => {
@@ -259,6 +284,7 @@ export function TablesManager() {
               table={table}
               onEdit={setEditingTable}
               onDelete={(id) => setDeleteTableId(id)}
+              onClearTable={setClearTarget}
             />
           ))}
         </div>
@@ -288,6 +314,18 @@ export function TablesManager() {
         confirmLabel="Delete Table"
         variant="danger"
         loading={deleting}
+      />
+
+      <ConfirmDialog
+        open={clearTarget !== null}
+        onClose={() => setClearTarget(null)}
+        onConfirm={handleClearTable}
+        title="Clear Table"
+        message={`This ends the current session at ${clearTarget?.label ?? "this table"}. Any customer still there will need to scan the QR code again to start a new order.`}
+        confirmLabel="Clear Table"
+        loadingLabel="Clearing..."
+        variant="danger"
+        loading={clearing}
       />
     </div>
   );

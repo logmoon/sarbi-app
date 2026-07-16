@@ -13,6 +13,7 @@ export type TableData = {
   qr_code_url: string | null;
   is_active: boolean;
   has_active_session: boolean;
+  active_session_id: string | null;
   location_id: string;
 };
 
@@ -20,6 +21,7 @@ type TableCardProps = {
   table: TableData;
   onEdit: (table: TableData) => void;
   onDelete: (id: string) => void;
+  onClearTable: (table: TableData) => void;
 };
 
 function getStatus(table: TableData) {
@@ -51,7 +53,7 @@ const statusConfig: Record<Status, { label: string; badge: string; border: strin
   },
 };
 
-export function TableCard({ table, onEdit, onDelete }: TableCardProps) {
+export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardProps) {
   const [qrSvg, setQrSvg] = useState<string>("");
   const [qrError, setQrError] = useState<string | null>(null);
   const [showCode, setShowCode] = useState(false);
@@ -223,6 +225,16 @@ export function TableCard({ table, onEdit, onDelete }: TableCardProps) {
           </div>
         )}
       </div>
+
+      {status === "occupied" && (
+        <Button
+          variant="danger"
+          className="mb-2 w-full text-xs"
+          onClick={() => onClearTable(table)}
+        >
+          Clear Table
+        </Button>
+      )}
 
       <div className="mt-auto flex gap-2">
         <Button

@@ -18,6 +18,7 @@ import { ItemDetailModal } from "@/components/customer/item-detail-modal";
 import { CartDrawer } from "@/components/customer/cart-drawer";
 import { OrderConfirmation } from "@/components/customer/order-confirmation";
 import { ActionButtons } from "@/components/customer/action-buttons";
+import { FullScreenMessage } from "@/components/customer/full-screen-message";
 
 type CustomerShellProps = {
   tenantSlug: string;
@@ -51,6 +52,10 @@ export function CustomerShell({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [activeTab, setActiveTab] = useState<MenuTab>("menu");
+  // True once the customer has declined "Are you with [name]?" — they are
+  // deliberately not joined into the existing session (see declineSession),
+  // so there is nothing for them to do here until staff clears the table.
+  const [blocked, setBlocked] = useState(false);
   const { waiterPending, billPending } = useEvents(
     session.session?.session_id ?? null
   );
@@ -67,6 +72,7 @@ export function CustomerShell({
 
   useEffect(() => {
     initialized.current = false;
+    setBlocked(false);
   }, [publicCode]);
 
   useEffect(() => {
@@ -98,9 +104,10 @@ export function CustomerShell({
     await session.joinSession();
   }, [session]);
 
-  const handleDeclineSession = useCallback(() => {
+  const handleDeclineSession = useCallback(async () => {
     setShowAreYouWith(false);
-    session.declineSession();
+    await session.declineSession();
+    setBlocked(true);
   }, [session]);
 
   const handlePlaceOrder = useCallback(
@@ -202,6 +209,19 @@ export function CustomerShell({
   const brandVars = Object.fromEntries(
     Object.entries(brandColors).map(([key, val]) => [`--color-${key}`, val])
   );
+
+  if (blocked) {
+    return (
+      <FullScreenMessage
+        title="Just a Moment"
+        description="We've let our staff know you're here — they'll be over to check the table shortly. You can try again once they've sorted it out."
+        action={{
+          label: "Try Again",
+          onClick: () => window.location.reload(),
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background" style={brandVars as React.CSSProperties}>
