@@ -49,6 +49,7 @@ export async function getStaffTenantId(): Promise<{
 export async function getStaffTenantAndLocation(): Promise<{
   tenantId: string;
   locationId: string;
+  staffId: string;
   supabase: Awaited<ReturnType<typeof createClient>>;
   error?: NextResponse;
 }> {
@@ -57,6 +58,7 @@ export async function getStaffTenantAndLocation(): Promise<{
     return {
       tenantId: "",
       locationId: "",
+      staffId: "",
       supabase,
       error: NextResponse.json(
         { error: "Unauthorized", code: "UNAUTHORIZED" },
@@ -68,7 +70,7 @@ export async function getStaffTenantAndLocation(): Promise<{
   const admin = createAdminClient();
   const { data: staff, error: staffErr } = await admin
     .from("staff")
-    .select("tenant_id, location_id")
+    .select("id, tenant_id, location_id")
     .eq("auth_id", user.id)
     .single();
 
@@ -76,6 +78,7 @@ export async function getStaffTenantAndLocation(): Promise<{
     return {
       tenantId: "",
       locationId: "",
+      staffId: "",
       supabase,
       error: NextResponse.json(
         { error: "Forbidden", code: "FORBIDDEN" },
@@ -84,5 +87,49 @@ export async function getStaffTenantAndLocation(): Promise<{
     };
   }
 
-  return { tenantId: staff.tenant_id, locationId: staff.location_id, supabase };
+  return {
+    tenantId: staff.tenant_id,
+    locationId: staff.location_id,
+    staffId: staff.id,
+    supabase,
+  };
+}
+
+export type StaffRole =
+  | "super_admin"
+  | "owner"
+  | "location_manager"
+  | "kitchen"
+  | "floor";
+
+export type StaffRecord = {
+  tenantId: string;
+  locationId: string | null;
+  role: StaffRole;
+};
+
+/**
+ * Looks up a staff member's role/tenant/location straight from the `staff`
+ * table. Do NOT read role off `user.app_metadata` — the custom_access_token_hook
+ * (migration 004) writes `user_role` into the JWT's claims, not into the
+ * `auth.users.raw_app_meta_data` column that `getUser()` surfaces, so
+ * `user.app_metadata?.user_role` is always undefined. The `staff` table is
+ * the single source of truth for role/location, consistent with every other
+ * staff-authenticated route in this codebase.
+ */
+export async function getStaffRecord(authId: string): Promise<StaffRecord | null> {
+  const admin = createAdminClient();
+  const { data: staff, error } = await admin
+    .from("staff")
+    .select("tenant_id, location_id, role")
+    .eq("auth_id", authId)
+    .single();
+
+  if (error || !staff) return null;
+
+  return {
+    tenantId: staff.tenant_id,
+    locationId: staff.location_id,
+    role: staff.role as StaffRole,
+  };
 }

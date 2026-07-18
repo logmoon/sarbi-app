@@ -31,6 +31,13 @@ const config: Config = {
           DEFAULT: "var(--color-border)",
           focus: "var(--color-border-focus)",
         },
+        kds: {
+          background: "var(--color-kds-background)",
+          surface: "var(--color-kds-surface)",
+          text: "var(--color-kds-text)",
+          "text-secondary": "var(--color-kds-text-secondary)",
+          "border-subtle": "var(--color-kds-border-subtle)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "var(--font-noto-sans-arabic)", "sans-serif"],

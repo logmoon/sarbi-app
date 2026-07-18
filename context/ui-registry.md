@@ -258,3 +258,25 @@ Last updated: 2026-07-09
 
 **Pattern notes:**
 Bottom sheet drawer for cart review. Triggered by a floating accent pill showing count + total. Drawer slides up from bottom with overlay backdrop. Quantity controls are 24×24 circular buttons with min/max/remove. Place Order is in the sticky bottom footer area with an optional notes input.
+
+### KdsBoard (+ OrderQueueCard, CancelOrderModal)
+
+Files: `components/kds/kds-board.tsx`, `components/kds/order-queue-card.tsx`, `components/kds/cancel-order-modal.tsx`
+Last updated: 2026-07-18
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Page background  | `bg-kds-background text-kds-text` (fixed dark theme — see "KDS (fixed dark theme)" in ui-tokens.md) |
+| Card             | `rounded-md border-2 bg-kds-surface p-4` |
+| Card border      | `border-status-error` (pending) / `border-status-warning` (in_progress) / `border-status-success` (ready) |
+| Status label     | `text-xs font-semibold tracking-wide` in matching status color — paired with the border, never color alone |
+| Table label      | `text-[32px] font-bold leading-none` (deliberately outside the default type scale — see ui-tokens.md) |
+| Item name        | `text-xl` (20px, exact match to Tailwind's default scale) |
+| Secondary text   | `text-kds-text-secondary` |
+| Timer            | `font-mono text-lg font-semibold tabular-nums`, color escalates `text-kds-text-secondary` → `text-status-warning` (≥10min) → `text-status-error` (≥15min) |
+| Grid             | `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4` (same responsive pattern as TableCard's grid) |
+| Mute toggle      | `h-10 w-10 rounded-full border border-kds-border-subtle` icon button, top-right of header |
+| Cancel modal     | Reuses `Dialog` (light theme, unchanged) — radiogroup of reason codes + conditional text field for "other" |
+
+**Pattern notes:**
+KDS is the one screen in the app with a fixed dark theme, independent of everything else — don't reuse `bg-kds-*` tokens anywhere outside `components/kds/`. `OrderQueueCard` fades out via CSS transition keyed to `READY_FADE_MS` (exported from `hooks/use-kds-orders.ts`) so the animation duration and the actual list-removal timing can never drift apart — if that constant changes, the fade updates automatically. The cancel modal intentionally stays light-themed (an overlay dialog doesn't need to match the page behind it, and reusing `Dialog` as-is avoids a one-off dark variant). Sound (`hooks/use-kds-sound.ts`) unlocks on first pointer/keydown anywhere on the page rather than gating the queue behind a splash screen — don't add one.

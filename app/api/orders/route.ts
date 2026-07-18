@@ -1,9 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrderSchema } from "@/lib/validators";
+import { getStaffTenantAndLocation } from "@/lib/api-helpers";
+
+const KDS_STATUSES = ["pending", "in_progress", "ready"];
+const READY_STALE_MS = 2 * 60 * 1000; // exclude orders that went `ready` more than 2 min ago
 
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get("session_id");
+  const locationId = request.nextUrl.searchParams.get("location_id");
+
+  if (locationId) {
+    // Staff-authenticated path (KDS). The caller's own location_id comes
+    // from the `staff` table, not from the query param — the param is only
+    // used to make the intent explicit in the request.
+    const { locationId: staffLocationId, supabase, error } =
+      await getStaffTenantAndLocation();
+    if (error) return error;
+
+    if (staffLocationId !== locationId) {
+      return NextResponse.json(
+        { error: "Forbidden", code: "FORBIDDEN" },
+        { status: 403 }
+      );
+    }
+
+    const readyCutoff = new Date(Date.now() - READY_STALE_MS).toISOString();
+
+    const { data: orders, error: ordersErr } = await supabase
+      .from("orders")
+      .select("*, order_items(*), tables(label)")
+      .eq("location_id", staffLocationId)
+      .in("status", KDS_STATUSES)
+      .or(`status.neq.ready,updated_at.gte.${readyCutoff}`)
+      .order("created_at", { ascending: true });
+
+    if (ordersErr) {
+      return NextResponse.json(
+        { error: "Failed to fetch orders", code: "DB_ERROR" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ data: orders ?? [] });
+  }
 
   if (!sessionId) {
     return NextResponse.json(

@@ -46,6 +46,20 @@ Design tokens for this project. Use these everywhere — never hardcode values o
 | `--color-border` | `#E5E7EB` | Card borders, dividers, input borders |
 | `--color-border-focus` | `#F59E0B` | Input focus rings (matches accent) |
 
+### KDS (fixed dark theme)
+
+The KDS screen is always dark, independent of the rest of the app (there is no light/dark toggle elsewhere — this is a dedicated palette for one full-screen surface).
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--color-kds-background` | `#111827` | KDS page background |
+| `--color-kds-surface` | `#1F2937` | Order cards |
+| `--color-kds-text` | `#F9FAFB` | Primary text on dark surfaces |
+| `--color-kds-text-secondary` | `#9CA3AF` | Metadata, timestamps, secondary labels |
+| `--color-kds-border-subtle` | `#374151` | Neutral dividers/borders where status color doesn't apply |
+
+Status border colors reuse the existing `--color-success` / `--color-warning` / `--color-error` tokens — they're vivid enough to read on the dark surface without a separate dark-specific set.
+
 ---
 
 ## Typography
@@ -58,8 +72,8 @@ Design tokens for this project. Use these everywhere — never hardcode values o
 | Body | 16px / 1rem | 400 | `--color-text-primary` | 1.5 |
 | Small / Label | 14px / 0.875rem | 500 | `--color-text-secondary` | 1.4 |
 | Caption | 12px / 0.75rem | 400 | `--color-text-muted` | 1.4 |
-| KDS table label | 32px / 2rem | 700 | `--color-text-primary` | 1.0 |
-| KDS item name | 20px / 1.25rem | 400 | `--color-text-primary` | 1.3 |
+| KDS table label | 32px / 2rem | 700 | `--color-kds-text` | 1.0 |
+| KDS item name | 20px / 1.25rem | 400 | `--color-kds-text` | 1.3 |
 
 Font stack: `Inter`, `Noto Sans Arabic`, `sans-serif`
 
@@ -136,9 +150,10 @@ focus ring: 2px solid --color-accent (#F59E0B)
 
 ### KDS Cards (dark variant)
 ```
-background: #1F2937
-border: 2px solid (status-dependent)
+background: --color-kds-surface (#1F2937)
+border: 2px solid (status-dependent: --color-error pending / --color-warning in_progress / --color-success ready)
 border-radius: --radius-md (8px)
 padding: --space-4 (16px)
-text: #F9FAFB
+text: --color-kds-text (#F9FAFB)
+secondary text: --color-kds-text-secondary (#9CA3AF)
 ```

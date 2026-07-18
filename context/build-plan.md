@@ -230,6 +230,14 @@ Foundation first (scaffold, auth, database), then data layer (menu, tables), the
 
 **Exit criteria:** Kitchen staff logs in, sees live order queue. New order appears with chime. Taps "Start" → card turns yellow. Taps "Done" → card turns green and exits queue. Can cancel with reason from PENDING or IN_PROGRESS. Time counter visible and color-coded.
 
+**Implementation notes:**
+
+- One endpoint, not two: `PATCH /api/orders/[id]` handles start/ready/cancel together (state machine validated server-side), using the `cancelled_reason`/`cancelled_by` columns that existed since Task 07's schema but were unused — the customer-facing cancel route stuffs this into `metadata` instead, which is inconsistent but out of scope to fix here.
+- "Fades out" (READY) is client-side only — no `delivered` DB state exists yet (that's Task 09). Cards fade over 8s then drop from the local list; the initial/reconnect fetch also excludes `ready` orders older than ~2 min so a page load doesn't show stale ready orders from before Task 09 exists.
+- No blocking "tap to enable sound" screen — the chime unlocks silently on the first tap anywhere on the page (e.g. the first "Start"), with a small mute toggle instead.
+- Auth reuses `getStaffTenantAndLocation()` / RLS, same pattern as the tables/menu routes. Owners and multi-location managers (`location_id` null) can view any location's KDS within their tenant; kitchen and single-location managers are locked to their own.
+- Found and fixed a blocking pre-existing bug in `app/(platform)/layout.tsx` — see the Done entry in `progress-tracker.md` for details.
+
 ---
 
 ### 09 Floor Staff App (Live Feed + Session History)

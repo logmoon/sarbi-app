@@ -28,6 +28,13 @@
   --color-border: #E5E7EB;
   --color-border-focus: #F59E0B;
 
+  /* KDS (fixed dark theme — always dark, independent of the rest of the app) */
+  --color-kds-background: #111827;
+  --color-kds-surface: #1F2937;
+  --color-kds-text: #F9FAFB;
+  --color-kds-text-secondary: #9CA3AF;
+  --color-kds-border-subtle: #374151;
+
   /* Border Radius */
   --radius-sm: 6px;
   --radius-md: 8px;
