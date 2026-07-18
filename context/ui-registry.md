@@ -280,3 +280,21 @@ Last updated: 2026-07-18
 
 **Pattern notes:**
 KDS is the one screen in the app with a fixed dark theme, independent of everything else — don't reuse `bg-kds-*` tokens anywhere outside `components/kds/`. `OrderQueueCard` fades out via CSS transition keyed to `READY_FADE_MS` (exported from `hooks/use-kds-orders.ts`) so the animation duration and the actual list-removal timing can never drift apart — if that constant changes, the fade updates automatically. The cancel modal intentionally stays light-themed (an overlay dialog doesn't need to match the page behind it, and reusing `Dialog` as-is avoids a one-off dark variant). Sound (`hooks/use-kds-sound.ts`) unlocks on first pointer/keydown anywhere on the page rather than gating the queue behind a splash screen — don't add one.
+
+### Auth Screens (layout + login + setup)
+
+Files: `app/(auth)/layout.tsx`, `app/(auth)/login/page.tsx`, `app/(auth)/setup/page.tsx`
+Last updated: 2026-07-18
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Page background  | `bg-background` + `QrMotifBackground` (inline SVG, `fillOpacity="0.05"`, `text-accent`) |
+| Wordmark         | `text-3xl font-bold tracking-tight text-accent` + tagline `text-sm text-text-secondary` below it |
+| Card             | Standard `Card`, overridden to `p-6 sm:p-8` (more breathing room than the default `p-4`) |
+| Heading          | `text-2xl font-bold text-text-primary` + one-line `text-sm text-text-secondary` subline |
+| Error message     | `flex items-start gap-2 rounded-md bg-status-error/10 px-3 py-2 text-sm text-status-error` with an inline alert-circle icon — same box convention as `ActionButtons`' error toast, never color-only |
+| Button spinner   | `h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent` inline with the loading label (same spinner technique as `customer-shell.tsx`, just white for use on the filled accent button) |
+| Entrance motion  | `motion-safe:animate-fade-in` on the whole card block (keyframe registered in `tailwind.config.ts`) — one entrance only, nothing else animates |
+
+**Pattern notes:**
+`QrMotifBackground` is a deliberate, on-brand signature element (Sarbi is a QR-ordering product) — a sparse, irregular grid of rounded squares at 5% opacity, not a literal QR code. Reuse it if another auth-adjacent screen needs the same treatment; don't invent a second background motif. The wordmark is the same `text-accent font-bold` treatment already used in the dashboard sidebar, just larger here since it's the hero context. Copy is grounded and specific ("Sign in to manage your restaurant," "Welcome, {name}") rather than generic boilerplate — no invented links or contact info were added since none exist yet (no forgot-password flow, no support address).

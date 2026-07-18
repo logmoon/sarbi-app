@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
-export default function SetupPage() {
+export default function SetupPage(): React.ReactNode {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -86,9 +86,12 @@ export default function SetupPage() {
 
   if (valid === null) {
     return (
-      <Card>
+      <Card className="p-6 sm:p-8">
         <CardContent>
-          <p className="text-center text-text-secondary">Validating invite...</p>
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            <p className="text-sm text-text-secondary">Validating your invite...</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -96,28 +99,47 @@ export default function SetupPage() {
 
   if (!valid) {
     return (
-      <Card>
-      <CardHeader>
-        <h1 className="text-center text-xl font-bold text-text-primary">
-          Invalid or expired invite
-        </h1>
-      </CardHeader>
-      <CardContent>
-        <p className="text-center text-sm text-text-secondary">
-          This invite link is invalid or has expired. Contact your restaurant
-          admin for a new one.
-        </p>
-      </CardContent>
-    </Card>
+      <Card className="p-6 sm:p-8">
+        <CardContent>
+          <div className="flex flex-col items-center gap-3 py-2 text-center">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-status-error/10 text-status-error">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </span>
+            <h1 className="text-xl font-bold text-text-primary">
+              Invalid or expired invite
+            </h1>
+            <p className="text-sm text-text-secondary">
+              This invite link is invalid or has expired. Contact your
+              restaurant admin for a new one.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <h1 className="text-center text-xl font-bold text-text-primary">
-          Set up your account
-        </h1>
+    <Card className="p-6 sm:p-8">
+      <CardHeader className="mb-6">
+        <h1 className="text-2xl font-bold text-text-primary">Set up your account</h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          {name
+            ? `Welcome, ${name} — create a password to finish setting up.`
+            : "Create a password to finish setting up."}
+        </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -146,10 +168,34 @@ export default function SetupPage() {
             disabled={loading}
           />
           {error && (
-            <p className="text-sm text-status-error">{error}</p>
+            <div className="flex items-start gap-2 rounded-md bg-status-error/10 px-3 py-2 text-sm text-status-error">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mt-0.5 shrink-0"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>{error}</span>
+            </div>
           )}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Setting up..." : "Create account"}
+          <Button type="submit" disabled={loading} className="mt-1 w-full">
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Setting up...
+              </span>
+            ) : (
+              "Create account"
+            )}
           </Button>
         </form>
       </CardContent>
