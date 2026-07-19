@@ -331,3 +331,91 @@ Last updated: 2026-07-19
 
 **Pattern notes:**
 Self-contained file upload with drag-and-drop support. States: empty drop zone, existing image preview (shows above zone), file selected row (name + size + cancel + upload), uploading (button dimmed), error (red text below). Labels and messages use i18n via `t()` — must receive `locale` prop. The drop zone icon is an upload arrow (Feather-style, 24×24, 2px stroke). Remove link uses `status-error` text on `border-border` background — consistent with the `muted + hover:status-error` convention from CartDrawer's remove button. When `currentUrl` is set and is an image, shows a preview above the drop zone. When `currentUrl` is set, the drop zone text changes to "Replace Image" — use `common.replaceImage` key. Hidden native `<input type="file">` is triggered by clicking the drop zone.
+
+### FloorBoard
+
+File: `components/floor/floor-board.tsx`
+Last updated: 2026-07-19
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `flex h-screen flex-col bg-background` |
+| Header           | `shrink-0 border-b border-border px-4 py-3` |
+| Header title     | `text-lg font-bold text-text-primary` |
+| Header subtitle  | `text-xs text-text-secondary` |
+| Mute toggle      | `h-10 w-10 rounded-full border border-border text-text-secondary hover:bg-surface` (matches KDS pattern) |
+| Tab bar          | `shrink-0 border-b border-border bg-background` |
+| Tab container    | `flex gap-1 px-4 py-2` |
+| Tab active       | `bg-accent text-white` |
+| Tab inactive     | `text-text-secondary hover:bg-surface hover:text-text-primary` |
+| Tab              | `rounded-sm px-3 py-1.5 text-sm font-medium transition-colors` |
+| Error banner     | `mx-4 mt-3 shrink-0 rounded-sm border border-status-error bg-status-error/10 px-3 py-2 text-sm text-status-error` |
+| Content area     | `flex-1 overflow-y-auto px-4 py-3` |
+
+**Pattern notes:**
+Full-screen layout (h-screen) — the floor app is a dedicated staff screen, not a dashboard page with sidebar. Tab switcher uses the same pill-style active state as sidebar nav items (accent bg + white text). Mute toggle matches KDS mute button styling exactly. Mobile-optimized via padding and touch targets. Error banner matches the existing error display convention from tables-manager.
+
+### FeedCard
+
+File: `components/floor/feed-card.tsx`
+Last updated: 2026-07-19
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Base             | Uses `Card` component with status-border override |
+| Status border    | `border-l-4` (follows TableCard convention: status-success, status-warning, status-error, status-info, border) |
+| Card gap         | `flex-col gap-2` |
+| Header row       | `flex items-start justify-between gap-2` |
+| Event label      | `text-sm font-semibold text-text-primary` (waiter/bill/check) |
+| Status label     | `text-sm font-semibold` in status-to-matching-text-color |
+| Table info       | `text-sm text-text-secondary` (with customer name after em-dash) |
+| Timestamp        | `text-xs text-text-muted` (right-aligned) |
+| Running total    | `text-sm font-semibold text-accent` |
+| Items list       | `text-sm text-text-secondary` (comma-separated "Qtyx Name") |
+| Cancel reason    | `text-sm text-text-secondary` (translated via `translateCancelReason()`) |
+| Action row       | `mt-1 flex gap-2` |
+| Action button    | `flex-1 text-xs` (primary for Resolve/ConfirmDelivered, secondary for Acknowledge) |
+
+**Pattern notes:**
+FeedCard handles 5 card types via a discriminated union (`FeedItem`). Status-left-border convention (4px, color-coded) matches TableCard pattern. Event-based cards (waiter/bill/check) show Resolve button; order-based cards show ConfirmDelivered (ready) or Acknowledge (cancelled). Cancellation reason codes (`out_of_stock`, `kitchen_error`, `other`) are translated using existing `kds.cancelReason.*` i18n keys. Prices use `formatItemPrice()` from lib/utils, matching the customer cart convention.
+
+### LiveFeed
+
+File: `components/floor/live-feed.tsx`
+Last updated: 2026-07-19
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Card list gap    | `flex flex-col gap-3` |
+| Loading state    | `flex items-center justify-center py-16` with `text-text-muted` |
+| Empty state icon | 40×40 SVG checkmark, `text-text-muted`, `strokeWidth="1.5"`, `mb-2` |
+| Empty state title| `text-lg font-medium text-text-primary` |
+| Empty state desc | `text-sm text-text-secondary` (below title, centered) |
+
+**Pattern notes:**
+Empty state follows the established KDS all-caught-up pattern (40×40 Feather-style icon, centered, text below). Feeds are built by merging event-based items (from `table_events`) and order-based items (from `orders` with ready/cancelled status), sorted oldest-first by `created_at`.
+
+### SessionTab
+
+File: `components/floor/session-tab.tsx`
+Last updated: 2026-07-19
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Base             | Uses `Card` component |
+| Session card gap | `flex flex-col gap-3` |
+| Expand toggle    | Full-width button, `flex items-center justify-between text-left` |
+| Session title    | `text-sm font-semibold text-text-primary` |
+| Session meta     | `text-xs text-text-secondary` |
+| Session total    | `text-sm font-semibold text-accent` |
+| Chevron          | 16×16 SVG, `text-text-muted`, `transition-transform`, `rotate-180` when expanded |
+| Expanded area    | `border-t border-border pt-3` |
+| Order card       | `rounded-sm border border-border bg-background p-2` (inside expanded session) |
+| Status badge     | `rounded-full px-2 py-0.5 text-xs font-medium` — pending=error/10, in_progress=warning/10, ready=success/10, delivered/cancelled=muted/10 |
+| Order total      | `text-xs font-semibold text-text-primary` |
+| Order items      | `text-xs text-text-secondary` |
+| Clear Table btn  | `variant="danger"`, `w-full text-xs`, inside a `border-t border-border pt-3` divider |
+| Empty sessions   | Same empty-state pattern as LiveFeed/KDS (40×40 icon + title + desc) |
+
+**Pattern notes:**
+Expandable accordion pattern for session history. Status badges use the same color scheme as order status badges elsewhere (pending=error, in_progress=warning, ready=success, others=muted). Clear Table uses ConfirmDialog (danger variant) matching the existing TablesManager pattern. Prices use `formatItemPrice()`.
