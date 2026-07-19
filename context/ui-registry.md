@@ -93,7 +93,7 @@ Last updated: 2026-07-09
 | Disabled         | `opacity-50 cursor-not-allowed` |
 
 **Pattern notes:**
-Uses `role="switch"` with `aria-checked`. Inline-flex with label on the right. Thumb slides `translate-x-4` when checked. Track is `h-5 w-9 rounded-full`.
+Uses `role="switch"` with `aria-checked`. Inline-flex with label on the right. Thumb slides `translate-x-4 rtl:-translate-x-4` when checked (RTL-aware). Thumb position uses `ms-0.5` (logical margin-inline-start) for correct RTL anchoring. Track is `h-5 w-9 rounded-full`.
 
 ### ConfirmDialog
 
@@ -136,21 +136,26 @@ TableCard has three visual states derived from `is_active` + `has_active_session
 ### Sidebar
 
 File: `components/layout/sidebar.tsx`
-Last updated: 2026-07-09
+Last updated: 2026-07-19
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
-| Container        | `w-60 border-r border-border bg-surface` |
+| Container        | `fixed inset-y-0 start-0 z-30 flex w-60 flex-col border-r border-border bg-surface transition-transform lg:static lg:translate-x-0 rtl:lg:translate-x-0` |
+| Closed (mobile)  | `-translate-x-full rtl:translate-x-full` |
 | Logo area        | `h-14 border-b border-border px-4` |
 | Nav item (active) | `bg-accent text-white` |
 | Nav item (inactive) | `text-text-secondary hover:bg-background hover:text-text-primary` |
 | Nav item         | `rounded-sm px-3 py-2 text-sm font-medium` |
-| "Soon" badge     | `text-xs text-text-muted` |
-| Hamburger        | `fixed left-4 top-3 z-40 lg:hidden` |
+| Section label    | `mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-text-muted` |
+| Section divider  | `my-3 border-t border-border` |
+| Staff screens    | Secondary section below management items with divider + label, links to `/kds/[locationId]` and `/floor/[locationId]` |
+| "Soon" badge     | `ms-auto text-xs text-text-muted` (logical margin for RTL) |
+| Hamburger        | `fixed start-4 top-3 z-40 lg:hidden` (logical positioning) |
 | Mobile overlay   | `fixed inset-0 z-30 bg-black/30 lg:hidden` |
+| Sticky           | Parent layout uses `h-screen overflow-hidden` — sidebar is fixed-height, main scrolls independently |
 
 **Pattern notes:**
-Fixed 240px (`w-60`) on desktop, slides in from left on mobile with backdrop. Active nav item uses accent bg with white text. Inactive items use secondary text color. Routes not yet built show "Soon" badge. Mobile hamburger toggles visibility.
+Fixed 240px (`w-60`) on desktop, slides in from left on mobile with backdrop. Active nav item uses accent bg with white text. Inactive items use secondary text color. Staff screens section appears only when `staffLocationId` prop is provided (fetched server-side in dashboard layout). Routes not yet built show "Soon" badge. All positioning uses logical properties (`start-0`, `start-4`, `ms-auto`) for RTL compatibility. Mobile close animation reverses correctly in RTL via `rtl:translate-x-full`.
 
 ### MenuItemCard
 
@@ -298,3 +303,31 @@ Last updated: 2026-07-18
 
 **Pattern notes:**
 `QrMotifBackground` is a deliberate, on-brand signature element (Sarbi is a QR-ordering product) — a sparse, irregular grid of rounded squares at 5% opacity, not a literal QR code. Reuse it if another auth-adjacent screen needs the same treatment; don't invent a second background motif. The wordmark is the same `text-accent font-bold` treatment already used in the dashboard sidebar, just larger here since it's the hero context. Copy is grounded and specific ("Sign in to manage your restaurant," "Welcome, {name}") rather than generic boilerplate — no invented links or contact info were added since none exist yet (no forgot-password flow, no support address).
+
+### FileUpload
+
+File: `components/ui/file-upload.tsx`
+Last updated: 2026-07-19
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Drop zone        | `flex cursor-pointer flex-col items-center gap-2 rounded-sm border-2 border-dashed px-4 py-5 text-center transition-colors` |
+| Drop zone (idle) | `border-border hover:border-accent hover:bg-background` |
+| Drop zone (drag) | `border-accent bg-accent-light` |
+| Drop zone (disabled) | `pointer-events-none opacity-50` |
+| Upload icon      | 24×24 SVG, `text-text-muted`, `strokeWidth="2"` |
+| Drop zone title  | `text-sm text-text-secondary` |
+| Drop zone subtitle | `text-xs text-text-muted` |
+| Label            | `mb-1.5 text-sm font-medium text-text-secondary` (matches Input label pattern) |
+| File row         | `flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2` |
+| Filename         | `min-w-0 flex-1 truncate text-sm text-text-primary` |
+| File size        | `shrink-0 text-xs text-text-muted` |
+| Remove button    | `shrink-0 rounded-sm p-1 text-text-muted hover:text-text-primary` |
+| Upload button    | `shrink-0 rounded-sm px-3 py-1 text-sm font-medium text-white bg-accent hover:bg-accent-hover` |
+| Upload button (loading) | `bg-accent opacity-50` |
+| Error            | `mt-1 text-xs text-status-error` (matches Input error pattern) |
+| Image preview    | `mb-2 overflow-hidden rounded-sm` container, `h-32 w-full object-cover` img |
+| Remove link      | `mt-2 rounded-sm border border-border px-3 py-1.5 text-sm text-status-error hover:bg-background disabled:opacity-50` |
+
+**Pattern notes:**
+Self-contained file upload with drag-and-drop support. States: empty drop zone, existing image preview (shows above zone), file selected row (name + size + cancel + upload), uploading (button dimmed), error (red text below). Labels and messages use i18n via `t()` — must receive `locale` prop. The drop zone icon is an upload arrow (Feather-style, 24×24, 2px stroke). Remove link uses `status-error` text on `border-border` background — consistent with the `muted + hover:status-error` convention from CartDrawer's remove button. When `currentUrl` is set and is an image, shows a preview above the drop zone. When `currentUrl` is set, the drop zone text changes to "Replace Image" — use `common.replaceImage` key. Hidden native `<input type="file">` is triggered by clicking the drop zone.
