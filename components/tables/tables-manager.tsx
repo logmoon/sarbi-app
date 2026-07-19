@@ -7,10 +7,13 @@ import { TableCard, type TableData } from "@/components/tables/table-card";
 import { AddTableDialog } from "@/components/tables/add-table-dialog";
 import { EditTableDialog } from "@/components/tables/edit-table-dialog";
 import { createClient } from "@/lib/supabase/client";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 type ApiErrorResponse = { error: string; code?: string };
 
 export function TablesManager() {
+  const { locale } = useLanguage();
   const [tables, setTables] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +38,11 @@ export function TablesManager() {
       const json: { data: TableData[] } = await res.json();
       setTables(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load tables");
+      setError(err instanceof Error ? err.message : t(locale, "table.failedToLoad"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     fetchTables();
@@ -127,7 +130,7 @@ export function TablesManager() {
     if (!res.ok) {
       const err: ApiErrorResponse = await res.json();
       setTables(previous);
-      setError(err.error ?? "Failed to delete table");
+      setError(err.error ?? t(locale, "table.failedToDelete"));
     }
     setDeleting(false);
   };
@@ -149,7 +152,7 @@ export function TablesManager() {
       setClearTarget(null);
       await fetchTables();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear table");
+      setError(err instanceof Error ? err.message : t(locale, "table.failedToClear"));
     } finally {
       setClearing(false);
     }
@@ -199,7 +202,7 @@ export function TablesManager() {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>QR Codes - Print</title>
+          <title>${t(locale, "table.downloadPrint")}</title>
           <style>
             @page { margin: 10mm; }
             body { font-family: sans-serif; }
@@ -224,14 +227,14 @@ export function TablesManager() {
       })
       .catch(() => {
         printWindow.close();
-        setError("Failed to generate QR codes for download.");
+        setError(t(locale, "table.downloadFailed"));
       });
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-text-muted">Loading tables...</p>
+        <p className="text-text-muted">{t(locale, "table.loadingTables")}</p>
       </div>
     );
   }
@@ -242,38 +245,38 @@ export function TablesManager() {
         <div className="mb-4 rounded-sm border border-status-error bg-status-error/10 p-3 text-sm text-status-error">
           {error}
           <button className="ml-2 underline" onClick={() => setError(null)}>
-            Dismiss
+            {t(locale, "common.dismiss")}
           </button>
         </div>
       )}
 
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Tables</h1>
+          <h1 className="text-2xl font-bold text-text-primary">{t(locale, "table.title")}</h1>
           <p className="text-sm text-text-secondary">
-            Manage your tables and download QR codes
+            {t(locale, "table.subtitle")}
           </p>
         </div>
         <div className="flex gap-2">
           {tables.length > 0 && (
             <Button variant="secondary" onClick={handleDownloadAll}>
-              Download All
+              {t(locale, "table.downloadAll")}
             </Button>
           )}
-          <Button onClick={() => setAddDialogOpen(true)}>+ Add Table</Button>
+          <Button onClick={() => setAddDialogOpen(true)}>{t(locale, "table.addTable")}</Button>
         </div>
       </div>
 
       {tables.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <p className="text-lg font-medium text-text-primary">
-            No tables yet
+            {t(locale, "table.noTables")}
           </p>
           <p className="mt-1 text-sm text-text-secondary">
-            Add your first table to generate QR codes.
+            {t(locale, "table.noTablesDesc")}
           </p>
           <Button className="mt-4" onClick={() => setAddDialogOpen(true)}>
-            + Add Table
+            {t(locale, "table.addTable")}
           </Button>
         </div>
       ) : (
@@ -309,9 +312,9 @@ export function TablesManager() {
         open={deleteTableId !== null}
         onClose={() => setDeleteTableId(null)}
         onConfirm={handleDelete}
-        title="Delete Table"
-        message="Are you sure you want to delete this table? This action cannot be undone."
-        confirmLabel="Delete Table"
+        title={t(locale, "table.deleteTitle")}
+        message={t(locale, "table.deleteConfirm")}
+        confirmLabel={t(locale, "table.deleteTitle")}
         variant="danger"
         loading={deleting}
       />
@@ -320,10 +323,10 @@ export function TablesManager() {
         open={clearTarget !== null}
         onClose={() => setClearTarget(null)}
         onConfirm={handleClearTable}
-        title="Clear Table"
-        message={`This ends the current session at ${clearTarget?.label ?? "this table"}. Any customer still there will need to scan the QR code again to start a new order.`}
-        confirmLabel="Clear Table"
-        loadingLabel="Clearing..."
+        title={t(locale, "table.clearTableTitle")}
+        message={t(locale, "table.clearTableConfirm", { label: clearTarget?.label ?? "" })}
+        confirmLabel={t(locale, "table.clearTableTitle")}
+        loadingLabel={t(locale, "table.clearing")}
         variant="danger"
         loading={clearing}
       />

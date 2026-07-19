@@ -5,6 +5,8 @@ import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 import type { CancelReasonCode } from "@/lib/validators";
 
 type CancelOrderModalProps = {
@@ -15,10 +17,10 @@ type CancelOrderModalProps = {
   tableLabel: string;
 };
 
-const REASONS: { value: CancelReasonCode; label: string }[] = [
-  { value: "out_of_stock", label: "Out of stock" },
-  { value: "kitchen_error", label: "Kitchen error" },
-  { value: "other", label: "Other" },
+const REASONS: { value: CancelReasonCode; i18nKey: string }[] = [
+  { value: "out_of_stock", i18nKey: "kds.cancelReason.outOfStock" },
+  { value: "kitchen_error", i18nKey: "kds.cancelReason.kitchenError" },
+  { value: "other", i18nKey: "kds.cancelReason.other" },
 ];
 
 export function CancelOrderModal({
@@ -30,6 +32,7 @@ export function CancelOrderModal({
 }: CancelOrderModalProps): React.ReactNode {
   const [reasonCode, setReasonCode] = useState<CancelReasonCode>("out_of_stock");
   const [reasonNote, setReasonNote] = useState("");
+  const { locale } = useLanguage();
 
   const handleClose = () => {
     setReasonCode("out_of_stock");
@@ -44,12 +47,12 @@ export function CancelOrderModal({
   const canConfirm = reasonCode !== "other" || reasonNote.trim().length > 0;
 
   return (
-    <Dialog open={open} onClose={handleClose} title={`Cancel order — ${tableLabel}`}>
+    <Dialog open={open} onClose={handleClose} title={t(locale, "kds.cancelTitle", { table: tableLabel })}>
       <p className="mb-4 text-sm text-text-secondary">
-        This order will be removed from the kitchen queue. Choose a reason:
+        {t(locale, "kds.cancelBody")}
       </p>
 
-      <div className="flex flex-col gap-2" role="radiogroup" aria-label="Cancellation reason">
+      <div className="flex flex-col gap-2" role="radiogroup" aria-label={t(locale, "kds.cancelReasonAria")}>
         {REASONS.map((reason) => (
           <label
             key={reason.value}
@@ -68,7 +71,7 @@ export function CancelOrderModal({
               onChange={() => setReasonCode(reason.value)}
               className="h-4 w-4 accent-accent"
             />
-            {reason.label}
+            {t(locale, reason.i18nKey)}
           </label>
         ))}
       </div>
@@ -76,8 +79,8 @@ export function CancelOrderModal({
       {reasonCode === "other" && (
         <div className="mt-3">
           <Input
-            label="Details"
-            placeholder="What happened?"
+            label={t(locale, "kds.cancelDetails")}
+            placeholder={t(locale, "kds.cancelDetailsPlaceholder")}
             value={reasonNote}
             onChange={(e) => setReasonNote(e.target.value)}
           />
@@ -86,14 +89,14 @@ export function CancelOrderModal({
 
       <DialogActions>
         <Button variant="secondary" onClick={handleClose} disabled={loading}>
-          Keep order
+          {t(locale, "kds.keepOrder")}
         </Button>
         <Button
           variant="danger"
           onClick={handleConfirm}
           disabled={loading || !canConfirm}
         >
-          {loading ? "Cancelling..." : "Cancel order"}
+          {loading ? t(locale, "kds.cancelling") : t(locale, "kds.cancelOrder")}
         </Button>
       </DialogActions>
     </Dialog>

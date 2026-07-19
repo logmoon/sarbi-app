@@ -1,13 +1,7 @@
 "use client";
 
-import { type Locale } from "@/hooks/use-language";
+import { type Locale, t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-const labels: Record<Locale, string> = {
-  ar: "العربية",
-  fr: "Français",
-  en: "English",
-};
 
 type LanguageToggleProps = {
   locale: Locale;
@@ -30,7 +24,7 @@ export function LanguageToggle({ locale, onChange }: LanguageToggleProps) {
               : "text-text-secondary hover:text-text-primary"
           )}
         >
-          {labels[l]}
+          {t(l, "locale." + l)}
         </button>
       ))}
     </div>

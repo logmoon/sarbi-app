@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getLocaleFromAcceptLanguage, isSupportedLocale } from "@/lib/i18n";
 
 function getEnv(name: string): string {
   const value = process.env[name];
@@ -10,6 +11,12 @@ function getEnv(name: string): string {
 export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
+
+  const cookieLocale = request.cookies.get("sarbi-locale")?.value;
+  const locale = isSupportedLocale(cookieLocale ?? "")
+    ? cookieLocale as "ar" | "fr" | "en"
+    : getLocaleFromAcceptLanguage(request.headers.get("accept-language"));
+  requestHeaders.set("x-locale", locale);
 
   let supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } });
 

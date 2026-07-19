@@ -3,16 +3,24 @@ export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CustomerShell } from "@/components/customer/customer-shell";
 import { FullScreenMessage } from "@/components/customer/full-screen-message";
+import { t } from "@/lib/i18n";
 
 type PageProps = {
   params: Promise<{ tenantSlug: string; publicCode: string }>;
 };
 
+function getLocale(headersList: Headers): "ar" | "fr" | "en" {
+  return (headersList.get("x-locale") ?? "fr") as "ar" | "fr" | "en";
+}
+
 export async function generateMetadata({ params }: PageProps) {
   const { tenantSlug } = await params;
+  const headersList = await headers();
+  const locale = getLocale(headersList);
   const admin = createAdminClient();
   const { data: tenant } = await admin
     .from("tenants")
@@ -20,16 +28,18 @@ export async function generateMetadata({ params }: PageProps) {
     .eq("slug", tenantSlug)
     .single();
 
-  if (!tenant) return { title: "Menu not found" };
+  if (!tenant) return { title: t(locale, "meta.menuNotFound") };
 
   return {
-    title: `${tenant.name} — Digital Menu`,
-    description: `Browse the menu and order from ${tenant.name}`,
+    title: t(locale, "meta.menuTitle", { name: tenant.name }),
+    description: t(locale, "meta.menuDesc", { name: tenant.name }),
   };
 }
 
 export default async function CustomerMenuPage({ params }: PageProps) {
   const { tenantSlug, publicCode } = await params;
+  const headersList = await headers();
+  const locale = getLocale(headersList);
 
   const admin = createAdminClient();
 
@@ -53,8 +63,8 @@ export default async function CustomerMenuPage({ params }: PageProps) {
   if (!table.is_active) {
     return (
       <FullScreenMessage
-        title="Table Unavailable"
-        description="This table is currently inactive. Please ask a staff member for assistance."
+        title={t(locale, "customer.tableUnavailable")}
+        description={t(locale, "customer.tableUnavailableDesc")}
       />
     );
   }

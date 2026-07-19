@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { formatItemPrice, cn } from "@/lib/utils";
 import { type MenuItem } from "@/hooks/use-menu";
-import { type Locale } from "@/hooks/use-language";
+import { type Locale } from "@/lib/i18n";
 
 type MenuItemCardProps = {
   item: MenuItem;

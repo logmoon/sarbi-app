@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 import { READY_FADE_MS, type KdsOrder } from "@/hooks/use-kds-orders";
 
 type OrderQueueCardProps = {
@@ -13,28 +15,35 @@ type OrderQueueCardProps = {
   actionLoading: boolean;
 };
 
-const STATUS_STYLES: Record<
-  KdsOrder["status"],
-  { border: string; label: string; labelClass: string }
-> = {
-  pending: {
-    border: "border-status-error",
-    label: "PENDING",
-    labelClass: "text-status-error",
-  },
-  in_progress: {
-    border: "border-status-warning",
-    label: "IN PROGRESS",
-    labelClass: "text-status-warning",
-  },
-  ready: {
-    border: "border-status-success",
-    label: "READY",
-    labelClass: "text-status-success",
-  },
-  delivered: { border: "border-status-success", label: "DELIVERED", labelClass: "text-status-success" },
-  cancelled: { border: "border-status-error", label: "CANCELLED", labelClass: "text-status-error" },
-};
+type StatusBorder = "border-status-error" | "border-status-warning" | "border-status-success";
+
+function getStatusBorder(status: KdsOrder["status"]): StatusBorder {
+  switch (status) {
+    case "pending":
+    case "cancelled":
+      return "border-status-error";
+    case "in_progress":
+      return "border-status-warning";
+    default:
+      return "border-status-success";
+  }
+}
+
+function getStatusLabelClass(status: KdsOrder["status"]): string {
+  switch (status) {
+    case "pending":
+    case "cancelled":
+      return "text-status-error";
+    case "in_progress":
+      return "text-status-warning";
+    default:
+      return "text-status-success";
+  }
+}
+
+function getStatusI18nKey(status: KdsOrder["status"]): string {
+  return "kds.status." + status;
+}
 
 function formatElapsed(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);
@@ -54,6 +63,7 @@ export function OrderQueueCard({
   actionLoading,
 }: OrderQueueCardProps): React.ReactNode {
   const [elapsedSeconds, setElapsedSeconds] = useState(() => getElapsedSeconds(order.created_at));
+  const { locale } = useLanguage();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,7 +80,7 @@ export function OrderQueueCard({
         ? "text-status-warning"
         : "text-kds-text-secondary";
 
-  const style = STATUS_STYLES[order.status];
+  const style = { border: getStatusBorder(order.status), labelClass: getStatusLabelClass(order.status) };
   const isReady = order.status === "ready";
 
   return (
@@ -96,7 +106,7 @@ export function OrderQueueCard({
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className={cn("text-xs font-semibold tracking-wide", style.labelClass)}>
-            {style.label}
+            {t(locale, getStatusI18nKey(order.status))}
           </span>
           <span className={cn("font-mono text-lg font-semibold tabular-nums", timerClass)}>
             {formatElapsed(elapsedSeconds)}
@@ -129,14 +139,14 @@ export function OrderQueueCard({
             onClick={onCancel}
             disabled={actionLoading}
           >
-            Cancel
+            {t(locale, "common.cancel")}
           </Button>
           <Button
             variant="primary"
             onClick={order.status === "pending" ? onStart : onMarkReady}
             disabled={actionLoading}
           >
-            {order.status === "pending" ? "Start Order" : "Mark Ready"}
+            {order.status === "pending" ? t(locale, "kds.startOrder") : t(locale, "kds.markReady")}
           </Button>
         </div>
       )}

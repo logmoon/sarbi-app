@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { type MenuCategory } from "@/hooks/use-menu";
-import { type Locale } from "@/hooks/use-language";
+import { type Locale } from "@/lib/i18n";
 
 type CategoryTabsProps = {
   categories: MenuCategory[];

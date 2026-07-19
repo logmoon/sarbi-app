@@ -5,6 +5,8 @@ import QRCode from "qrcode";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 export type TableData = {
   id: string;
@@ -32,39 +34,55 @@ function getStatus(table: TableData) {
 
 type Status = ReturnType<typeof getStatus>;
 
-const statusConfig: Record<Status, { label: string; badge: string; border: string; dim: boolean }> = {
-  occupied: {
-    label: "Occupied",
-    badge: "bg-status-success/10 text-status-success",
-    border: "border-l-status-success",
-    dim: false,
-  },
-  available: {
-    label: "Available",
-    badge: "bg-text-muted/10 text-text-muted",
-    border: "border-l-border",
-    dim: false,
-  },
-  inactive: {
-    label: "Inactive",
-    badge: "bg-text-muted/10 text-text-muted",
-    border: "border-l-text-muted",
-    dim: true,
-  },
-};
+function getStatusI18nKey(status: Status): string {
+  switch (status) {
+    case "occupied":
+      return "table.status.occupied";
+    case "available":
+      return "table.status.available";
+    case "inactive":
+      return "table.status.inactive";
+  }
+}
+
+function getStatusBadge(status: Status): string {
+  switch (status) {
+    case "occupied":
+      return "bg-status-success/10 text-status-success";
+    case "available":
+      return "bg-text-muted/10 text-text-muted";
+    case "inactive":
+      return "bg-text-muted/10 text-text-muted";
+  }
+}
+
+function getStatusBorder(status: Status): string {
+  switch (status) {
+    case "occupied":
+      return "border-l-status-success";
+    case "available":
+      return "border-l-border";
+    case "inactive":
+      return "border-l-text-muted";
+  }
+}
+
+function isStatusDimmed(status: Status): boolean {
+  return status === "inactive";
+}
 
 export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardProps) {
   const [qrSvg, setQrSvg] = useState<string>("");
   const [qrError, setQrError] = useState<string | null>(null);
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { locale } = useLanguage();
 
   const status = getStatus(table);
-  const config = statusConfig[status];
 
   useEffect(() => {
     if (!table.qr_code_url) {
-      setQrError("No QR code URL");
+      setQrError(t(locale, "table.noQrCode"));
       return;
     }
     let cancelled = false;
@@ -78,10 +96,10 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
         if (!cancelled) setQrSvg(svg);
       })
       .catch(() => {
-        if (!cancelled) setQrError("Failed to load QR");
+        if (!cancelled) setQrError(t(locale, "table.failedLoadQr"));
       });
     return () => { cancelled = true; };
-  }, [table.qr_code_url]);
+  }, [table.qr_code_url, locale]);
 
   const downloadPNG = async () => {
     if (!table.qr_code_url) return;
@@ -95,7 +113,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
       link.download = `${table.label.replace(/\s+/g, "-").toLowerCase()}-qr.png`;
       link.click();
     } catch {
-      setQrError("Failed to generate PNG");
+      setQrError(t(locale, "table.failedGeneratePng"));
     }
   };
 
@@ -115,7 +133,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
       link.click();
       URL.revokeObjectURL(url);
     } catch {
-      setQrError("Failed to generate SVG");
+      setQrError(t(locale, "table.failedGenerateSvg"));
     }
   };
 
@@ -133,8 +151,8 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
     <Card
       className={cn(
         "flex flex-col border-l-4 transition-opacity",
-        config.border,
-        config.dim && "opacity-60"
+        getStatusBorder(status),
+        isStatusDimmed(status) && "opacity-60"
       )}
     >
       <div className="mb-3 flex items-start justify-between">
@@ -145,10 +163,10 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
           <span
             className={cn(
               "mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium",
-              config.badge
+              getStatusBadge(status)
             )}
           >
-            {config.label}
+            {t(locale, getStatusI18nKey(status))}
           </span>
         </div>
 
@@ -157,7 +175,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
             variant="ghost"
             className="h-8 w-8 min-w-0 p-0"
             onClick={() => onEdit(table)}
-            aria-label={`Edit ${table.label}`}
+            aria-label={t(locale, "common.edit") + " " + table.label}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -168,7 +186,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
             variant="ghost"
             className="h-8 w-8 min-w-0 p-0 text-status-error hover:text-status-error"
             onClick={() => onDelete(table.id)}
-            aria-label={`Delete ${table.label}`}
+            aria-label={t(locale, "common.delete") + " " + table.label}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6" />
@@ -190,7 +208,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
           />
         ) : (
           <div className="flex h-28 w-28 items-center justify-center rounded-sm bg-background">
-            <span className="text-xs text-text-muted">Loading...</span>
+            <span className="text-xs text-text-muted">{t(locale, "table.loading")}</span>
           </div>
         )}
 
@@ -198,7 +216,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
           onClick={() => setShowCode(!showCode)}
           className="mt-2 text-xs text-text-muted hover:text-text-secondary transition-colors"
         >
-          {showCode ? "Hide code" : "Show code"}
+          {showCode ? t(locale, "table.hideCode") : t(locale, "table.showCode")}
         </button>
 
         {showCode && (
@@ -209,7 +227,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
             <button
               onClick={copyCode}
               className="rounded-sm p-0.5 text-text-muted hover:text-text-primary transition-colors"
-              aria-label="Copy code"
+              aria-label={t(locale, "table.copyCode")}
             >
               {copied ? (
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -232,7 +250,7 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
           className="mb-2 w-full text-xs"
           onClick={() => onClearTable(table)}
         >
-          Clear Table
+          {t(locale, "table.clearTable")}
         </Button>
       )}
 
@@ -242,14 +260,14 @@ export function TableCard({ table, onEdit, onDelete, onClearTable }: TableCardPr
           className="flex-1 text-xs"
           onClick={downloadPNG}
         >
-          PNG
+          {t(locale, "table.png")}
         </Button>
         <Button
           variant="secondary"
           className="flex-1 text-xs"
           onClick={downloadSVG}
         >
-          SVG
+          {t(locale, "table.svg")}
         </Button>
       </div>
     </Card>

@@ -5,6 +5,8 @@ import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createTableSchema } from "@/lib/validators";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 type AddTableDialogProps = {
   open: boolean;
@@ -13,6 +15,7 @@ type AddTableDialogProps = {
 };
 
 export function AddTableDialog({ open, onClose, onSave }: AddTableDialogProps) {
+  const { locale } = useLanguage();
   const [label, setLabel] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -30,17 +33,17 @@ export function AddTableDialog({ open, onClose, onSave }: AddTableDialogProps) {
       setLabel("");
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create table");
+      setError(err instanceof Error ? err.message : t(locale, "table.failedToCreate"));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Add Table">
+    <Dialog open={open} onClose={onClose} title={t(locale, "table.addTableTitle")}>
       <Input
-        label="Table Label"
-        placeholder="e.g. Table 5, Terrasse A"
+        label={t(locale, "table.label")}
+        placeholder={t(locale, "table.labelPlaceholder")}
         value={label}
         onChange={(e) => setLabel(e.target.value)}
         error={error ?? undefined}
@@ -48,10 +51,10 @@ export function AddTableDialog({ open, onClose, onSave }: AddTableDialogProps) {
       />
       <DialogActions>
         <Button variant="secondary" onClick={onClose} disabled={saving}>
-          Cancel
+          {t(locale, "common.cancel")}
         </Button>
         <Button onClick={handleSubmit} disabled={saving || !label.trim()}>
-          {saving ? "Adding..." : "Add Table"}
+          {saving ? t(locale, "table.adding") : t(locale, "table.addTableTitle")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 type NamePromptModalProps = {
   open: boolean;
@@ -23,15 +25,16 @@ export function NamePromptModal({
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const noop = useCallback(() => {}, []);
+  const { locale } = useLanguage();
 
   function handleSubmit() {
     const trimmed = name.trim();
     if (!trimmed) {
-      setError("Please enter your name");
+      setError(t(locale, "customer.nameRequired"));
       return;
     }
     if (trimmed.length > 100) {
-      setError("Name is too long");
+      setError(t(locale, "customer.nameTooLong"));
       return;
     }
     onConfirm(trimmed);

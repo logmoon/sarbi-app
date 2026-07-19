@@ -2,6 +2,8 @@
 
 import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 type OrderConfirmationProps = {
   open: boolean;
@@ -12,8 +14,10 @@ export function OrderConfirmation({
   open,
   onClose,
 }: OrderConfirmationProps) {
+  const { locale } = useLanguage();
+
   return (
-    <Dialog open={open} onClose={onClose} title="Order Placed!">
+    <Dialog open={open} onClose={onClose} title={t(locale, "order.confirmation.title")}>
       <div className="flex flex-col items-center gap-3 py-4">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-status-success/10">
           <svg
@@ -31,12 +35,11 @@ export function OrderConfirmation({
           </svg>
         </div>
         <p className="text-center text-sm text-text-secondary">
-          Your order has been sent to the kitchen. You will be notified when it
-          is ready.
+          {t(locale, "order.confirmation.body")}
         </p>
       </div>
       <DialogActions>
-        <Button onClick={onClose}>Continue Browsing</Button>
+        <Button onClick={onClose}>{t(locale, "order.continueBrowsing")}</Button>
       </DialogActions>
     </Dialog>
   );

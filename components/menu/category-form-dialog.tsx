@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/hooks/use-language";
+import { t } from "@/lib/i18n";
 
 type LocaleFields = {
   en: string;
@@ -28,6 +30,7 @@ export function CategoryFormDialog({
   initialValues,
   title,
 }: CategoryFormDialogProps) {
+  const { locale } = useLanguage();
   const [name, setName] = useState<LocaleFields>(DEFAULT_NAME);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function CategoryFormDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.en.trim() || !name.fr.trim() || !name.ar.trim()) {
-      setError("Name is required in all three languages.");
+      setError(t(locale, "menu.nameRequired"));
       return;
     }
     setSaving(true);
@@ -52,7 +55,7 @@ export function CategoryFormDialog({
       await onSave(name);
       onClose();
     } catch {
-      setError("Failed to save. Please try again.");
+      setError(t(locale, "menu.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -63,22 +66,22 @@ export function CategoryFormDialog({
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <Input
-            label="English"
+            label={t(locale, "menu.english")}
             value={name.en}
             onChange={(e) => setName({ ...name, en: e.target.value })}
-            placeholder="Category name in English"
+            placeholder={t(locale, "menu.categoryNameEn")}
           />
           <Input
-            label="French"
+            label={t(locale, "menu.french")}
             value={name.fr}
             onChange={(e) => setName({ ...name, fr: e.target.value })}
-            placeholder="Nom de la catégorie en français"
+            placeholder={t(locale, "menu.categoryNameFr")}
           />
           <Input
-            label="Arabic"
+            label={t(locale, "menu.arabic")}
             value={name.ar}
             onChange={(e) => setName({ ...name, ar: e.target.value })}
-            placeholder="اسم الفئة بالعربية"
+            placeholder={t(locale, "menu.categoryNameAr")}
             dir="rtl"
           />
           {error && (
@@ -92,10 +95,10 @@ export function CategoryFormDialog({
             onClick={onClose}
             disabled={saving}
           >
-            Cancel
+            {t(locale, "common.cancel")}
           </Button>
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save"}
+            {saving ? t(locale, "common.saving") : t(locale, "common.save")}
           </Button>
         </DialogActions>
       </form>

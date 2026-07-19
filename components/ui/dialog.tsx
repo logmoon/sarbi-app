@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 type DialogProps = {
   open: boolean;
@@ -21,6 +23,7 @@ export function Dialog({
   children,
   className,
 }: DialogProps) {
+  const { locale } = useLanguage();
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -112,7 +115,7 @@ export function Dialog({
             <button
               onClick={onClose}
               className="rounded-sm p-1 text-text-muted hover:bg-background hover:text-text-primary"
-              aria-label="Close"
+              aria-label={t(locale, "common.close")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

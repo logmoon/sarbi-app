@@ -6,11 +6,14 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function SetupPage(): React.ReactNode {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const { locale } = useLanguage();
 
   const token = searchParams.get("token");
 
@@ -45,11 +48,11 @@ export default function SetupPage(): React.ReactNode {
     setError("");
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(t(locale, "auth.setup.passwordMin"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t(locale, "auth.setup.passwordMismatch"));
       return;
     }
 
@@ -63,7 +66,7 @@ export default function SetupPage(): React.ReactNode {
 
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error || "Something went wrong.");
+      setError(data.error || t(locale, "auth.setup.somethingWrong"));
       setLoading(false);
       return;
     }
@@ -90,7 +93,7 @@ export default function SetupPage(): React.ReactNode {
         <CardContent>
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <span className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-            <p className="text-sm text-text-secondary">Validating your invite...</p>
+            <p className="text-sm text-text-secondary">{t(locale, "auth.setup.validating")}</p>
           </div>
         </CardContent>
       </Card>
@@ -119,11 +122,10 @@ export default function SetupPage(): React.ReactNode {
               </svg>
             </span>
             <h1 className="text-xl font-bold text-text-primary">
-              Invalid or expired invite
+              {t(locale, "auth.setup.invalidInvite")}
             </h1>
             <p className="text-sm text-text-secondary">
-              This invite link is invalid or has expired. Contact your
-              restaurant admin for a new one.
+              {t(locale, "auth.setup.invalidInviteDesc")}
             </p>
           </div>
         </CardContent>
@@ -134,34 +136,34 @@ export default function SetupPage(): React.ReactNode {
   return (
     <Card className="p-6 sm:p-8">
       <CardHeader className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">Set up your account</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{t(locale, "auth.setup.title")}</h1>
         <p className="mt-1 text-sm text-text-secondary">
           {name
-            ? `Welcome, ${name} — create a password to finish setting up.`
-            : "Create a password to finish setting up."}
+            ? t(locale, "auth.setup.welcome", { name })
+            : t(locale, "auth.setup.welcomeFallback")}
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            label="Name"
+            label={t(locale, "auth.setup.name")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={loading}
           />
           <Input
-            label="Password"
+            label={t(locale, "auth.password")}
             type="password"
-            placeholder="At least 6 characters"
+            placeholder={t(locale, "auth.setup.passwordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
             disabled={loading}
           />
           <Input
-            label="Confirm password"
+            label={t(locale, "auth.setup.confirmPassword")}
             type="password"
-            placeholder="Repeat your password"
+            placeholder={t(locale, "auth.setup.confirmPasswordPlaceholder")}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             autoComplete="new-password"
@@ -191,10 +193,10 @@ export default function SetupPage(): React.ReactNode {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Setting up...
+                {t(locale, "auth.setup.creatingAccount")}
               </span>
             ) : (
-              "Create account"
+              t(locale, "auth.setup.createAccount")
             )}
           </Button>
         </form>

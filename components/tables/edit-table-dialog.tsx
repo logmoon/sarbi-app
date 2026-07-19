@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { updateTableSchema } from "@/lib/validators";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 import type { TableData } from "@/components/tables/table-card";
 
 type EditTableDialogProps = {
@@ -16,6 +18,7 @@ type EditTableDialogProps = {
 };
 
 export function EditTableDialog({ open, onClose, onSave, table }: EditTableDialogProps) {
+  const { locale } = useLanguage();
   const [label, setLabel] = useState(table.label);
   const [isActive, setIsActive] = useState(table.is_active);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +45,7 @@ export function EditTableDialog({ open, onClose, onSave, table }: EditTableDialo
 
     const result = updateTableSchema.safeParse(data);
     if (!result.success) {
-      setError(result.error.issues[0]?.message ?? "Invalid input");
+      setError(result.error.issues[0]?.message ?? t(locale, "table.failedToUpdate"));
       return;
     }
 
@@ -51,24 +54,24 @@ export function EditTableDialog({ open, onClose, onSave, table }: EditTableDialo
       await onSave(result.data);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update table");
+      setError(err instanceof Error ? err.message : t(locale, "table.failedToUpdate"));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title={`Edit ${table.label}`}>
+    <Dialog open={open} onClose={onClose} title={t(locale, "table.edit", { label: table.label })}>
       <div className="space-y-4">
         <Input
-          label="Table Label"
-          placeholder="e.g. Table 5, Terrasse A"
+          label={t(locale, "table.label")}
+          placeholder={t(locale, "table.labelPlaceholder")}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           disabled={saving}
         />
         <div className="flex items-center justify-between">
-          <span className="text-sm text-text-primary">Active</span>
+          <span className="text-sm text-text-primary">{t(locale, "table.active")}</span>
           <Switch
             checked={isActive}
             onChange={setIsActive}
@@ -80,10 +83,10 @@ export function EditTableDialog({ open, onClose, onSave, table }: EditTableDialo
       )}
       <DialogActions>
         <Button variant="secondary" onClick={onClose} disabled={saving}>
-          Cancel
+          {t(locale, "common.cancel")}
         </Button>
         <Button onClick={handleSubmit} disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t(locale, "common.saving") : t(locale, "common.save")}
         </Button>
       </DialogActions>
     </Dialog>

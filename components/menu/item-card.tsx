@@ -3,6 +3,8 @@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { cn, formatPrice } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
+import { t } from "@/lib/i18n";
 
 type ItemCardProps<T extends { id: string; name: Record<string, string>; price: number; image_url: string | null; is_available: boolean }> = {
   item: T;
@@ -19,6 +21,8 @@ export function ItemCard<T extends { id: string; name: Record<string, string>; p
   onDelete,
   dragHandle,
 }: ItemCardProps<T>) {
+  const { locale } = useLanguage();
+
   return (
     <div
       className={cn(
@@ -78,7 +82,7 @@ export function ItemCard<T extends { id: string; name: Record<string, string>; p
         variant="ghost"
         className="h-8 w-8 min-w-0 p-0"
         onClick={() => onEdit(item)}
-        aria-label={`Edit ${item.name.en}`}
+        aria-label={`${t(locale, "common.edit")} ${item.name.en}`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -100,7 +104,7 @@ export function ItemCard<T extends { id: string; name: Record<string, string>; p
         variant="ghost"
         className="h-8 w-8 min-w-0 p-0 text-status-error hover:text-status-error"
         onClick={() => onDelete(item.id)}
-        aria-label={`Delete ${item.name.en}`}
+        aria-label={`${t(locale, "common.delete")} ${item.name.en}`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

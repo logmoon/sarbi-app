@@ -24,6 +24,8 @@ import { ItemCard } from "@/components/menu/item-card";
 import { ItemEditModal } from "@/components/menu/item-edit-modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/hooks/use-language";
+import { t } from "@/lib/i18n";
 
 type LocaleFields = {
   en: string;
@@ -80,6 +82,8 @@ function SortableCategory({
   onDeleteItem: (id: string) => void;
   itemIds: string[];
 }) {
+  const { locale } = useLanguage();
+
   const {
     attributes,
     listeners,
@@ -103,7 +107,7 @@ function SortableCategory({
             className="cursor-grab touch-none text-text-muted hover:text-text-primary"
             {...attributes}
             {...listeners}
-            aria-label="Drag to reorder"
+            aria-label={t(locale, "menu.dragToReorder")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -134,7 +138,7 @@ function SortableCategory({
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted">Category</span>
+            <span className="text-xs text-text-muted">{t(locale, "menu.category")}</span>
             <Switch
               checked={category.is_available}
               onChange={(checked) => onToggleAvailability(category.id, checked)}
@@ -145,7 +149,7 @@ function SortableCategory({
             variant="ghost"
             className="h-8 w-8 min-w-0 p-0"
             onClick={() => onEditCategory(category)}
-            aria-label={`Edit ${category.name.en}`}
+            aria-label={`${t(locale, "common.edit")} ${category.name.en}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -167,7 +171,7 @@ function SortableCategory({
             variant="ghost"
             className="h-8 w-8 min-w-0 p-0 text-status-error hover:text-status-error"
             onClick={() => onDelete(category.id)}
-            aria-label={`Delete ${category.name.en}`}
+            aria-label={`${t(locale, "common.delete")} ${category.name.en}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -190,7 +194,7 @@ function SortableCategory({
       <div className="border-t border-border p-4">
         {category.items.length === 0 ? (
           <p className="py-4 text-center text-sm text-text-muted">
-            No items yet. Click &ldquo;Add Item&rdquo; to create one.
+            {t(locale, "menu.noItems")}
           </p>
         ) : (
           <div className={!category.is_available ? "pointer-events-none opacity-60" : ""}>
@@ -218,7 +222,7 @@ function SortableCategory({
           className="mt-3 w-full"
           onClick={() => onAddItem(category.id)}
         >
-          + Add Item
+          {t(locale, "menu.addItem")}
         </Button>
       </div>
     </div>
@@ -236,6 +240,8 @@ function SortableItem({
   onEdit: (item: Item) => void;
   onDelete: (id: string) => void;
 }) {
+  const { locale } = useLanguage();
+
   const {
     attributes,
     listeners,
@@ -263,7 +269,7 @@ function SortableItem({
             className="cursor-grab touch-none text-text-muted hover:text-text-primary"
             {...attributes}
             {...listeners}
-            aria-label="Drag to reorder"
+            aria-label={t(locale, "menu.dragToReorder")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -288,6 +294,7 @@ function SortableItem({
 }
 
 export function MenuEditor() {
+  const { locale } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -327,11 +334,11 @@ export function MenuEditor() {
         }))
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load menu");
+      setError(err instanceof Error ? err.message : t(locale, "menu.failedToLoad"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     fetchData();
@@ -374,7 +381,7 @@ export function MenuEditor() {
 
         if (!res.ok) {
           setCategories(previous);
-          setError("Failed to reorder categories. Changes reverted.");
+          setError(t(locale, "menu.reorderFailed"));
         }
       } else {
         const category = findCategoryByItemId(current, active.id as string);
@@ -413,11 +420,11 @@ export function MenuEditor() {
 
         if (!res.ok) {
           setCategories(previous);
-          setError("Failed to reorder items. Changes reverted.");
+          setError(t(locale, "menu.reorderItemsFailed"));
         }
       }
     },
-    []
+    [locale]
   );
 
   const handleCreateCategory = async (name: LocaleFields) => {
@@ -471,7 +478,7 @@ export function MenuEditor() {
 
     if (!res.ok) {
       setCategories(previous);
-      setError("Failed to update category availability. Changes reverted.");
+      setError(t(locale, "menu.availabilityFailed"));
     }
   };
 
@@ -489,7 +496,7 @@ export function MenuEditor() {
 
     if (!res.ok) {
       setCategories(previous);
-      setError("Failed to delete category. Changes reverted.");
+      setError(t(locale, "menu.deleteFailed"));
     }
     setDeleting(false);
   };
@@ -565,7 +572,7 @@ export function MenuEditor() {
 
     if (!res.ok) {
       setCategories(previous);
-      setError("Failed to update item availability. Changes reverted.");
+      setError(t(locale, "menu.itemAvailabilityFailed"));
     }
   };
 
@@ -588,7 +595,7 @@ export function MenuEditor() {
 
     if (!res.ok) {
       setCategories(previous);
-      setError("Failed to delete item. Changes reverted.");
+      setError(t(locale, "menu.deleteItemFailed"));
     }
     setDeleting(false);
   };
@@ -634,7 +641,7 @@ export function MenuEditor() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-text-muted">Loading menu...</p>
+        <p className="text-text-muted">{t(locale, "menu.loadingMenu")}</p>
       </div>
     );
   }
@@ -656,31 +663,31 @@ export function MenuEditor() {
             className="ml-2 underline"
             onClick={() => setError(null)}
           >
-            Dismiss
+            {t(locale, "common.dismiss")}
           </button>
         </div>
       )}
 
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Menu</h1>
+          <h1 className="text-2xl font-bold text-text-primary">{t(locale, "menu.title")}</h1>
           <p className="text-sm text-text-secondary">
-            Manage your categories and items
+            {t(locale, "menu.subtitle")}
           </p>
         </div>
-        <Button onClick={openAddCategory}>+ Add Category</Button>
+        <Button onClick={openAddCategory}>{t(locale, "menu.addCategory")}</Button>
       </div>
 
       {categories.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <p className="text-lg font-medium text-text-primary">
-            No categories yet
+            {t(locale, "menu.noCategories")}
           </p>
           <p className="mt-1 text-sm text-text-secondary">
-            Create your first category to get started.
+            {t(locale, "menu.noCategoriesDesc")}
           </p>
           <Button className="mt-4" onClick={openAddCategory}>
-            + Add Category
+            {t(locale, "menu.addCategory")}
           </Button>
         </div>
       ) : (
@@ -723,7 +730,7 @@ export function MenuEditor() {
           editingCategory ? handleUpdateCategory : handleCreateCategory
         }
         initialValues={editingCategory?.name}
-        title={editingCategory ? "Edit Category" : "Add Category"}
+        title={editingCategory ? t(locale, "menu.editCategory") : t(locale, "menu.addCategoryTitle")}
       />
 
       <ItemEditModal
@@ -746,16 +753,16 @@ export function MenuEditor() {
               }
             : undefined
         }
-        title={editingItem ? "Edit Item" : "Add Item"}
+        title={editingItem ? t(locale, "menu.editItem") : t(locale, "menu.addItemTitle")}
       />
 
       <ConfirmDialog
         open={deleteCategoryId !== null}
         onClose={() => setDeleteCategoryId(null)}
         onConfirm={handleDeleteCategory}
-        title="Delete Category"
-        message="Are you sure you want to delete this category? All items in this category will also be deleted."
-        confirmLabel="Delete Category"
+        title={t(locale, "menu.deleteCategory")}
+        message={t(locale, "menu.deleteCategoryConfirm")}
+        confirmLabel={t(locale, "menu.deleteCategory")}
         variant="danger"
         loading={deleting}
       />
@@ -764,9 +771,9 @@ export function MenuEditor() {
         open={deleteItemId !== null}
         onClose={() => setDeleteItemId(null)}
         onConfirm={handleDeleteItem}
-        title="Delete Item"
-        message="Are you sure you want to delete this item?"
-        confirmLabel="Delete Item"
+        title={t(locale, "menu.deleteItem")}
+        message={t(locale, "menu.deleteItemConfirm")}
+        confirmLabel={t(locale, "menu.deleteItem")}
         variant="danger"
         loading={deleting}
       />

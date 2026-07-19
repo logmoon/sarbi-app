@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { t } from "@/lib/i18n";
 
 // A sparse grid of rounded squares, deliberately irregular — a nod to a QR
 // code's module grid without literally drawing one. Very low opacity, purely
@@ -38,15 +40,18 @@ export default async function AuthLayout({
     redirect("/dashboard");
   }
 
+  const headersList = await headers();
+  const locale = (headersList.get("x-locale") ?? "fr") as "ar" | "fr" | "en";
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6">
       <QrMotifBackground />
 
       <div className="relative w-full max-w-[400px] motion-safe:animate-fade-in">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="text-3xl font-bold tracking-tight text-accent">Sarbi</span>
+          <span className="text-3xl font-bold tracking-tight text-accent">{t(locale, "auth.wordmark")}</span>
           <span className="mt-1.5 text-sm text-text-secondary">
-            Digital menus &amp; table ordering
+            {t(locale, "auth.tagline")}
           </span>
         </div>
 

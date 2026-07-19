@@ -2,6 +2,8 @@
 
 import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 type AreYouWithModalProps = {
   open: boolean;
@@ -16,21 +18,22 @@ export function AreYouWithModal({
   onYes,
   onNo,
 }: AreYouWithModalProps) {
+  const { locale } = useLanguage();
+
   return (
     <Dialog
       open={open}
       onClose={() => {}}
-      title={`Are you with ${customerName}?`}
+      title={t(locale, "customer.areYouWith", { name: customerName })}
     >
       <p className="text-sm text-text-secondary">
-        There is an active session at this table. Are you with{" "}
-        <strong className="text-text-primary">{customerName}</strong>?
+        {t(locale, "customer.areYouWithDesc", { name: customerName })}
       </p>
       <DialogActions>
         <Button variant="secondary" onClick={onNo}>
-          No
+          {t(locale, "common.no")}
         </Button>
-        <Button onClick={onYes}>Yes</Button>
+        <Button onClick={onYes}>{t(locale, "common.yes")}</Button>
       </DialogActions>
     </Dialog>
   );

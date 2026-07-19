@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { t, type Locale } from "@/lib/i18n";
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
@@ -24,20 +25,20 @@ export function formatItemPrice(price: number): string {
   }).format(price);
 }
 
-export function timeAgo(date: Date | string): string {
+export function timeAgo(date: Date | string, locale: Locale = "en"): string {
   const now = new Date();
   const then = typeof date === "string" ? new Date(date) : date;
   const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
 
   if (seconds < 0) {
     const absSeconds = Math.abs(seconds);
-    if (absSeconds < 60) return "in a moment";
-    if (absSeconds < 3600) return `in ${Math.floor(absSeconds / 60)}m`;
-    if (absSeconds < 86400) return `in ${Math.floor(absSeconds / 3600)}h`;
-    return `in ${Math.floor(absSeconds / 86400)}d`;
+    if (absSeconds < 60) return t(locale, "time.inAMoment");
+    if (absSeconds < 3600) return t(locale, "time.inMinutes", { n: Math.floor(absSeconds / 60) });
+    if (absSeconds < 86400) return t(locale, "time.inHours", { n: Math.floor(absSeconds / 3600) });
+    return t(locale, "time.inDays", { n: Math.floor(absSeconds / 86400) });
   }
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
+  if (seconds < 60) return t(locale, "time.justNow");
+  if (seconds < 3600) return t(locale, "time.minutesAgo", { n: Math.floor(seconds / 60) });
+  if (seconds < 86400) return t(locale, "time.hoursAgo", { n: Math.floor(seconds / 3600) });
+  return t(locale, "time.daysAgo", { n: Math.floor(seconds / 86400) });
 }

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
+import { t, getLocaleFromAcceptLanguage } from "@/lib/i18n";
+import { LocaleProvider } from "@/components/layout/locale-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,23 +15,30 @@ const notoSansArabic = Noto_Sans_Arabic({
   variable: "--font-noto-sans-arabic",
 });
 
-export const metadata: Metadata = {
-  title: "Sarbi - Digital Menu & Ordering System",
-  description:
-    "QR-based digital menus and table ordering for cafés and restaurants in Tunisia",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const locale = getLocaleFromAcceptLanguage(headersList.get("accept-language"));
 
-export default function RootLayout({
+  return {
+    title: t(locale, "meta.title"),
+    description: t(locale, "meta.description"),
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const locale = (headersList.get("x-locale") ?? "fr") as "ar" | "fr" | "en";
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       <body
         className={`${inter.variable} ${notoSansArabic.variable} font-sans antialiased`}
       >
-        {children}
+        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );

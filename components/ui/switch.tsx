@@ -40,8 +40,8 @@ export function Switch({
         <span
           className={cn(
             "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-            "mt-0.5 ml-0.5",
-            checked && "translate-x-4"
+            "mt-0.5 ms-0.5",
+            checked && "translate-x-4 rtl:-translate-x-4"
           )}
         />
       </button>

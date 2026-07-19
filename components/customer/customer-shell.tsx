@@ -7,6 +7,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useMenu, type MenuItem } from "@/hooks/use-menu";
 import { useOrders } from "@/hooks/use-orders";
 import { useEvents } from "@/hooks/use-events";
+import { t } from "@/lib/i18n";
 import { LanguageToggle } from "@/components/customer/language-toggle";
 import { NamePromptModal } from "@/components/customer/name-prompt-modal";
 import { AreYouWithModal } from "@/components/customer/are-you-with-modal";
@@ -131,14 +132,12 @@ export function CustomerShell({
         const json = await res.json();
         if (!res.ok) {
           if (json.code === "ITEMS_UNAVAILABLE") {
-            alert(
-              "Some items are no longer available. Please refresh and try again."
-            );
+            alert(t(locale, "customer.itemsUnavailable"));
           } else if (json.code === "SESSION_INACTIVE") {
-            alert("Your session has ended. Please scan the QR code again.");
+            alert(t(locale, "customer.sessionEnded"));
             session.endSession();
           } else {
-            alert(json.error || "Failed to place order");
+            alert(json.error || t(locale, "customer.failedPlaceOrder"));
           }
           return;
         }
@@ -146,12 +145,12 @@ export function CustomerShell({
         refetchOrders();
         setShowConfirmation(true);
       } catch {
-        alert("Failed to place order. Please try again.");
+        alert(t(locale, "customer.failedPlaceOrderRetry"));
       } finally {
         setPlacingOrder(false);
       }
     },
-    [session, cart, placingOrder, refetchOrders]
+    [session, cart, placingOrder, refetchOrders, locale]
   );
 
   const handleCallWaiter = useCallback(async () => {
@@ -186,26 +185,6 @@ export function CustomerShell({
 
   const customerName = session.session?.customer_name;
 
-  const labels = {
-    ar: {
-      nameTitle: "ما اسمك؟",
-      namePlaceholder: "أدخل اسمك",
-      nameSubmit: "دخول",
-    },
-    fr: {
-      nameTitle: "Quel est votre nom ?",
-      namePlaceholder: "Entrez votre nom",
-      nameSubmit: "Entrer",
-    },
-    en: {
-      nameTitle: "What's your name?",
-      namePlaceholder: "Enter your name",
-      nameSubmit: "Enter",
-    },
-  };
-
-  const l = labels[locale] ?? labels["fr"];
-
   const brandVars = Object.fromEntries(
     Object.entries(brandColors).map(([key, val]) => [`--color-${key}`, val])
   );
@@ -213,10 +192,10 @@ export function CustomerShell({
   if (blocked) {
     return (
       <FullScreenMessage
-        title="Just a Moment"
-        description="We've let our staff know you're here — they'll be over to check the table shortly. You can try again once they've sorted it out."
+        title={t(locale, "customer.loading")}
+        description={t(locale, "customer.loadingDesc")}
         action={{
-          label: "Try Again",
+          label: t(locale, "customer.tryAgain"),
           onClick: () => window.location.reload(),
         }}
       />
@@ -241,7 +220,7 @@ export function CustomerShell({
               </h1>
               {customerName && (
                 <p className="text-xs text-text-secondary">
-                  Hello, {customerName}
+                  {t(locale, "customer.hello", { name: customerName })}
                 </p>
               )}
             </div>
@@ -261,10 +240,10 @@ export function CustomerShell({
       ) : categories.length === 0 ? (
         <div className="flex flex-col items-center gap-3 px-4 py-20 text-center">
           <p className="text-lg font-semibold text-text-primary">
-            Menu not available
+            {t(locale, "customer.menuNotAvailable")}
           </p>
           <p className="text-sm text-text-secondary">
-            This restaurant has not added any items yet.
+            {t(locale, "customer.menuNotAvailableDesc")}
           </p>
         </div>
       ) : activeTab === "menu" ? (
@@ -300,6 +279,7 @@ export function CustomerShell({
           loading={ordersLoading}
           error={ordersError}
           sessionId={session.session?.session_id ?? null}
+          locale={locale}
         />
       )}
 
@@ -329,9 +309,9 @@ export function CustomerShell({
 
       <NamePromptModal
         open={showNamePrompt && canOrder}
-        title={l.nameTitle}
-        placeholder={l.namePlaceholder}
-        submitLabel={l.nameSubmit}
+        title={t(locale, "customer.nameTitle")}
+        placeholder={t(locale, "customer.namePlaceholder")}
+        submitLabel={t(locale, "customer.nameSubmit")}
         onConfirm={handleNameConfirm}
       />
 

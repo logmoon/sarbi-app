@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatItemPrice } from "@/lib/utils";
 import { type MenuItem } from "@/hooks/use-menu";
-import { type Locale } from "@/hooks/use-language";
+import { type Locale, t } from "@/lib/i18n";
 
 type ItemDetailModalProps = {
   item: MenuItem | null;
@@ -67,15 +67,15 @@ export function ItemDetailModal({
 
       <div className="mb-4">
         <Input
-          label="Notes"
-          placeholder="Any special requests?"
+          label={t(locale, "item.notes")}
+          placeholder={t(locale, "item.notesPlaceholder")}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
       </div>
 
       <div className="mb-4 flex items-center gap-3">
-        <span className="text-sm font-medium text-text-secondary">Quantity</span>
+        <span className="text-sm font-medium text-text-secondary">{t(locale, "item.quantity")}</span>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -122,10 +122,10 @@ export function ItemDetailModal({
 
       <DialogActions>
         <Button variant="secondary" onClick={onClose}>
-          Cancel
+          {t(locale, "common.cancel")}
         </Button>
         <Button onClick={handleAdd}>
-          Add to Cart - {formatItemPrice(item.price * quantity)}
+          {t(locale, "item.addToCart", { price: formatItemPrice(item.price * quantity) })}
         </Button>
       </DialogActions>
     </Dialog>

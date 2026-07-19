@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 type ActionButtonsProps = {
   onCallWaiter: () => Promise<void>;
@@ -26,6 +28,7 @@ export function ActionButtons({
   const [waiterPending, setWaiterPending] = useState(initialWaiterPending);
   const [billPending, setBillPending] = useState(initialBillPending);
   const [error, setError] = useState<string | null>(null);
+  const { locale } = useLanguage();
 
   useEffect(() => { setWaiterPending(initialWaiterPending); }, [initialWaiterPending]);
   useEffect(() => { setBillPending(initialBillPending); }, [initialBillPending]);
@@ -38,7 +41,7 @@ export function ActionButtons({
       await onCallWaiter();
       setWaiterPending(true);
     } catch {
-      setError("Failed to call waiter.");
+      setError(t(locale, "customer.failedCallWaiter"));
     } finally {
       setCalling(false);
     }
@@ -52,7 +55,7 @@ export function ActionButtons({
       await onRequestBill();
       setBillPending(true);
     } catch {
-      setError("Failed to request bill.");
+      setError(t(locale, "customer.failedRequestBill"));
     } finally {
       setRequestingBill(false);
     }
@@ -96,7 +99,7 @@ export function ActionButtons({
             )}
           </svg>
           <span className="text-sm font-medium">
-            {waiterPending ? "Called" : "Call Waiter"}
+            {waiterPending ? t(locale, "customer.called") : t(locale, "customer.callWaiter")}
           </span>
         </Button>
         {hasOrders && (
@@ -132,7 +135,7 @@ export function ActionButtons({
               )}
             </svg>
             <span className="text-sm font-medium">
-              {billPending ? "Requested" : "Request Bill"}
+              {billPending ? t(locale, "customer.requested") : t(locale, "customer.requestBill")}
             </span>
           </Button>
         )}

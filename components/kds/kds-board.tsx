@@ -5,6 +5,8 @@ import { useKdsOrders, type KdsOrder } from "@/hooks/use-kds-orders";
 import { useKdsSound } from "@/hooks/use-kds-sound";
 import { OrderQueueCard } from "@/components/kds/order-queue-card";
 import { CancelOrderModal } from "@/components/kds/cancel-order-modal";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 import type { CancelReasonCode } from "@/lib/validators";
 
 type KdsBoardProps = {
@@ -38,6 +40,7 @@ export function KdsBoard({ locationId, locationName }: KdsBoardProps): React.Rea
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<KdsOrder | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const { locale } = useLanguage();
 
   const updateStatus = useCallback(async (orderId: string, body: Record<string, unknown>) => {
     setActionLoadingId(orderId);
@@ -50,14 +53,14 @@ export function KdsBoard({ locationId, locationName }: KdsBoardProps): React.Rea
       });
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        setActionError(json?.error ?? "Something went wrong. Please try again.");
+        setActionError(json?.error ?? t(locale, "kds.somethingWrong"));
       }
     } catch {
-      setActionError("Network error — please try again.");
+      setActionError(t(locale, "kds.networkError"));
     } finally {
       setActionLoadingId(null);
     }
-  }, []);
+  }, [locale]);
 
   const handleCancelConfirm = useCallback(
     async (reasonCode: CancelReasonCode, reasonNote?: string) => {
@@ -78,12 +81,14 @@ export function KdsBoard({ locationId, locationName }: KdsBoardProps): React.Rea
         <div>
           <h1 className="text-2xl font-bold">{locationName}</h1>
           <p className="text-sm text-kds-text-secondary">
-            {orders.length} order{orders.length === 1 ? "" : "s"} in queue
+            {orders.length === 1
+              ? t(locale, "kds.ordersInQueue", { count: orders.length })
+              : t(locale, "kds.ordersInQueuePlural", { count: orders.length })}
           </p>
         </div>
         <button
           onClick={toggleMute}
-          aria-label={muted ? "Unmute kitchen alerts" : "Mute kitchen alerts"}
+          aria-label={muted ? t(locale, "kds.unmute") : t(locale, "kds.mute")}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-kds-border-subtle text-kds-text-secondary transition-colors hover:bg-kds-surface"
         >
           {muted ? <SoundOffIcon /> : <SoundOnIcon />}
@@ -100,13 +105,13 @@ export function KdsBoard({ locationId, locationName }: KdsBoardProps): React.Rea
         <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-status-error bg-status-error/10 px-4 py-2 text-sm text-status-error">
           <span>{error}</span>
           <button onClick={refetch} className="font-medium underline">
-            Retry
+            {t(locale, "common.retry")}
           </button>
         </div>
       )}
 
       {loading && orders.length === 0 && (
-        <p className="text-kds-text-secondary">Loading orders…</p>
+        <p className="text-kds-text-secondary">{t(locale, "kds.loadingOrders")}</p>
       )}
 
       {!loading && orders.length === 0 && !error && (
@@ -124,9 +129,9 @@ export function KdsBoard({ locationId, locationName }: KdsBoardProps): React.Rea
           >
             <path d="M20 6 9 17l-5-5" />
           </svg>
-          <p className="text-lg font-medium">All caught up</p>
+          <p className="text-lg font-medium">{t(locale, "kds.allCaughtUp")}</p>
           <p className="text-sm text-kds-text-secondary">
-            New orders will appear here the moment they come in.
+            {t(locale, "kds.allCaughtUpDesc")}
           </p>
         </div>
       )}

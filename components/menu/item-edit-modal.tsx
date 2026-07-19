@@ -5,6 +5,9 @@ import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { FileUpload } from "@/components/ui/file-upload";
+import { useLanguage } from "@/hooks/use-language";
+import { t } from "@/lib/i18n";
 
 type LocaleFields = {
   en: string;
@@ -30,9 +33,31 @@ type ItemEditModalProps = {
 };
 
 const languages = [
-  { key: "en" as const, label: "English", placeholder: "In English" },
-  { key: "fr" as const, label: "French", placeholder: "En français" },
-  { key: "ar" as const, label: "Arabic", placeholder: "بالعربية", dir: "rtl" as const },
+  {
+    key: "en" as const,
+    labelKey: "menu.english" as const,
+    nameLabelKey: "menu.nameEnglish" as const,
+    descLabelKey: "menu.descriptionEnglish" as const,
+    placeholderKey: "menu.nameEnPlaceholder" as const,
+    descPlaceholderKey: "menu.descriptionEnPlaceholder" as const,
+  },
+  {
+    key: "fr" as const,
+    labelKey: "menu.french" as const,
+    nameLabelKey: "menu.nameFrench" as const,
+    descLabelKey: "menu.descriptionFrench" as const,
+    placeholderKey: "menu.nameFrPlaceholder" as const,
+    descPlaceholderKey: "menu.descriptionFrPlaceholder" as const,
+  },
+  {
+    key: "ar" as const,
+    labelKey: "menu.arabic" as const,
+    nameLabelKey: "menu.nameArabic" as const,
+    descLabelKey: "menu.descriptionArabic" as const,
+    placeholderKey: "menu.nameArPlaceholder" as const,
+    descPlaceholderKey: "menu.descriptionArPlaceholder" as const,
+    dir: "rtl" as const,
+  },
 ];
 
 const DEFAULT_FORM: ItemFormData = {
@@ -51,11 +76,11 @@ export function ItemEditModal({
   initialValues,
   title,
 }: ItemEditModalProps) {
+  const { locale } = useLanguage();
   const [activeLang, setActiveLang] = useState<"en" | "fr" | "ar">("en");
   const [form, setForm] = useState<ItemFormData>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -63,7 +88,6 @@ export function ItemEditModal({
       setActiveLang("en");
       setError(null);
       setSaving(false);
-      setUploading(false);
     }
   }, [open, initialValues]);
 
@@ -78,20 +102,6 @@ export function ItemEditModal({
     }));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const url = await onUploadImage(file);
-      setForm((prev) => ({ ...prev, image_url: url }));
-    } catch {
-      setError("Failed to upload image.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
@@ -99,12 +109,12 @@ export function ItemEditModal({
       !form.name.fr.trim() ||
       !form.name.ar.trim()
     ) {
-      setError("Name is required in all three languages.");
+      setError(t(locale, "menu.nameRequired"));
       return;
     }
     const price = parseFloat(form.price);
     if (isNaN(price) || price <= 0) {
-      setError("Price must be a positive number.");
+      setError(t(locale, "menu.priceInvalid"));
       return;
     }
     setSaving(true);
@@ -113,7 +123,7 @@ export function ItemEditModal({
       await onSave({ ...form, price: price.toString() });
       onClose();
     } catch {
-      setError("Failed to save. Please try again.");
+      setError(t(locale, "menu.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -134,7 +144,7 @@ export function ItemEditModal({
                   : "text-text-muted hover:text-text-primary"
               }`}
             >
-              {lang.label}
+              {t(locale, lang.labelKey)}
             </button>
           ))}
         </div>
@@ -144,21 +154,21 @@ export function ItemEditModal({
             activeLang === lang.key ? (
               <div key={lang.key} className="space-y-4">
                 <Input
-                  label={`Name (${lang.label})`}
+                  label={t(locale, lang.nameLabelKey)}
                   value={form.name[lang.key]}
                   onChange={(e) =>
                     updateField(lang.key, "name", e.target.value)
                   }
-                  placeholder={`Item name ${lang.placeholder}`}
+                  placeholder={t(locale, lang.placeholderKey)}
                   dir={lang.dir}
                 />
                 <Input
-                  label={`Description (${lang.label})`}
+                  label={t(locale, lang.descLabelKey)}
                   value={form.description[lang.key]}
                   onChange={(e) =>
                     updateField(lang.key, "description", e.target.value)
                   }
-                  placeholder={`Description ${lang.placeholder}`}
+                  placeholder={t(locale, lang.descPlaceholderKey)}
                   dir={lang.dir}
                 />
               </div>
@@ -166,7 +176,7 @@ export function ItemEditModal({
           )}
 
           <Input
-            label="Price (TND)"
+            label={t(locale, "menu.price")}
             type="number"
             step="0.001"
             min="0"
@@ -174,51 +184,27 @@ export function ItemEditModal({
             onChange={(e) =>
               setForm((prev) => ({ ...prev, price: e.target.value }))
             }
-            placeholder="e.g. 4.500"
+            placeholder={t(locale, "menu.pricePlaceholder")}
           />
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-text-secondary">
-              Image
-            </label>
-            {form.image_url && (
-              <div className="mb-2 overflow-hidden rounded-sm">
-                <img
-                  src={form.image_url}
-                  alt="Item"
-                  className="h-32 w-full object-cover"
-                />
-              </div>
-            )}
-            <div className="flex gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploading}
-                className="block w-full text-sm text-text-secondary file:mr-3 file:rounded-sm file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-accent-hover"
-              />
-              {form.image_url && (
-                <button
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, image_url: null }))}
-                  className="rounded-sm border border-border px-3 py-1.5 text-sm text-status-error hover:bg-background"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-            {uploading && (
-              <p className="mt-1 text-xs text-text-muted">Uploading...</p>
-            )}
-          </div>
+          <FileUpload
+            locale={locale}
+            label={t(locale, "menu.image")}
+            currentUrl={form.image_url}
+            onUpload={(file) => onUploadImage(file).then((url) => {
+              setForm((prev) => ({ ...prev, image_url: url }));
+              return url;
+            })}
+            onRemove={() => setForm((prev) => ({ ...prev, image_url: null }))}
+            disabled={saving}
+          />
 
           <Switch
             checked={form.is_available}
             onChange={(checked) =>
               setForm((prev) => ({ ...prev, is_available: checked }))
             }
-            label="Available"
+            label={t(locale, "menu.available")}
           />
 
           {error && (
@@ -231,12 +217,12 @@ export function ItemEditModal({
             type="button"
             variant="secondary"
             onClick={onClose}
-            disabled={saving || uploading}
+            disabled={saving}
           >
-            Cancel
+            {t(locale, "common.cancel")}
           </Button>
-          <Button type="submit" disabled={saving || uploading}>
-            {saving ? "Saving..." : "Save"}
+          <Button type="submit" disabled={saving}>
+            {saving ? t(locale, "common.saving") : t(locale, "common.save")}
           </Button>
         </DialogActions>
       </form>

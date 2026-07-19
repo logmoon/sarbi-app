@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 export type MenuTab = "menu" | "orders";
 
@@ -10,6 +12,8 @@ type TabSwitcherProps = {
 };
 
 export function TabSwitcher({ activeTab, onTabChange }: TabSwitcherProps) {
+  const { locale } = useLanguage();
+
   return (
     <div className="sticky top-[57px] z-20 border-b border-border bg-background">
       <div className="flex gap-1 px-4 py-2">
@@ -22,7 +26,7 @@ export function TabSwitcher({ activeTab, onTabChange }: TabSwitcherProps) {
               : "text-text-secondary hover:text-text-primary"
           )}
         >
-          Menu
+          {t(locale, "customer.tab.menu")}
         </button>
         <button
           onClick={() => onTabChange("orders")}
@@ -33,7 +37,7 @@ export function TabSwitcher({ activeTab, onTabChange }: TabSwitcherProps) {
               : "text-text-secondary hover:text-text-primary"
           )}
         >
-          My Orders
+          {t(locale, "customer.tab.myOrders")}
         </button>
       </div>
     </div>

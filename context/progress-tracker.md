@@ -31,6 +31,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 - 05. Table Management + QR Code Generation
 - 06. Customer Menu (Browsing, Cart, Ordering)
 - 06b. Customer Menu UX Polish — Vertical card layout, 2-column grid, My Orders tab with live Realtime, server-deduped event state, text-labeled action buttons, bill request hidden until orders exist, customer name in header
+- 06c. App-wide i18n — `lib/i18n.ts` with ~200 flat keys covering AR/FR/EN for every UI string across the entire app (customer menu, KDS, admin dashboard, auth screens, sidebar, tables, menu editor, metadata, time formatting). `t(locale, key, params?)` function with `{name}` interpolation. Server-side locale detection via middleware (`x-locale` header from cookie → Accept-Language fallback). Cookie ↔ localStorage sync in `useLanguage()` hook. All inline label objects removed. 0 build errors/warnings.
 - 07. Session Lifecycle + Timeout — built out of order (before 06c) as a bug-fix pass rather than a planned session. Realtime publication + `REPLICA IDENTITY FULL` enabled (was silently no-op-ing before), lazy timeout enforcement on every session lookup (not a cron job), race-safe session creation (partial unique index), "Are you with [name]?" → "No" blocks instead of joining, with **Clear Table** (`DELETE /api/sessions/[id]`, pulled forward from 09) as the resolution path. `context/build-plan.md` and `sarbi-design-doc.md` updated to match.
 - 08. Kitchen Display System (KDS) — built out of order (before 06c), at the developer's explicit request. Full-screen dark `/kds/[locationId]`: live queue via `PATCH /api/orders/[id]` (start/ready/cancel-with-reason, one state machine, `cancelled_reason`/`cancelled_by` columns finally used instead of the customer route's `metadata` workaround), Realtime + staff-authenticated `GET /api/orders?location_id=`, client-side fade/removal for `ready`/stale cards, Web Audio chime (30s loop while any `pending` order exists, mute persisted locally, no blocking "enable sound" gate), live color-coded age timer. New dark KDS design tokens added to `ui-tokens.md`/`globals.css`/`tailwind.config.ts`.
   - **Bug fix (blocking, found before building):** `app/(platform)/layout.tsx` read role off `user.app_metadata`, which the `custom_access_token_hook` never populates (it writes `user_role` into the JWT's own claims instead) — kitchen/floor/super_admin were never actually being redirected to their own app. Fixed by reading role from the `staff` table via a new `getStaffRecord()` helper. Also added `x-pathname` header forwarding (in `middleware.ts`) so the redirect doesn't loop when the user is already on their destination page.
@@ -39,7 +40,6 @@ _Read this at the start of every session before doing anything else. Keep it cur
 
 ## Up Next
 
-- **06c. App-wide i18n** — Shared `lib/i18n.ts` lookup with AR/FR/EN for every UI string across the entire app
 - 09. Floor Staff App (Live Feed + Session History) — note: Clear Table already exists on the dashboard, this task is really "give floor staff their own live feed + move/duplicate that button"
 
 ---

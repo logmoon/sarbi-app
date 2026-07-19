@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formatItemPrice, cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 import { type CartItem } from "@/hooks/use-cart";
 type CartDrawerProps = {
   items: CartItem[];
@@ -27,6 +29,7 @@ export function CartDrawer({
 }: CartDrawerProps) {
   const [open, setOpen] = useState(false);
   const [orderNotes, setOrderNotes] = useState("");
+  const { locale } = useLanguage();
 
   function handlePlaceOrder() {
     onPlaceOrder(orderNotes);
@@ -43,7 +46,7 @@ export function CartDrawer({
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
               {itemCount}
             </span>
-            <span className="text-sm font-semibold">View Cart</span>
+            <span className="text-sm font-semibold">{t(locale, "cart.viewCart", { count: itemCount })}</span>
             <span className="text-sm font-semibold">
               {formatItemPrice(total)}
             </span>
@@ -60,19 +63,19 @@ export function CartDrawer({
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-lg font-semibold text-text-primary">
-            Your Cart ({itemCount})
+            {t(locale, "cart.titleCount", { count: itemCount })}
           </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={onClear}
               className="text-xs text-status-error hover:underline"
             >
-              Clear
+              {t(locale, "common.clear")}
             </button>
             <button
               onClick={() => setOpen(false)}
               className="rounded-sm p-1 text-text-muted hover:bg-background"
-              aria-label="Close"
+              aria-label={t(locale, "common.close")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -95,7 +98,7 @@ export function CartDrawer({
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {items.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-muted">
-              Your cart is empty
+              {t(locale, "cart.empty")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -109,7 +112,7 @@ export function CartDrawer({
                       {cartItem.name}
                     </p>
                     <p className="text-xs text-text-muted">
-                      {formatItemPrice(cartItem.price)} each
+                      {formatItemPrice(cartItem.price)} {t(locale, "cart.each")}
                     </p>
                     {cartItem.notes && (
                       <p className="mt-0.5 text-xs italic text-text-secondary">
@@ -169,7 +172,7 @@ export function CartDrawer({
                     <button
                       onClick={() => onRemoveItem(cartItem.item_id)}
                       className="p-1 text-text-muted hover:text-status-error"
-                      aria-label="Remove item"
+                      aria-label={t(locale, "cart.removeItem")}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -197,7 +200,7 @@ export function CartDrawer({
           <div className="border-t border-border px-4 py-3">
             <div className="mb-2">
               <input
-                placeholder="Order notes (optional)"
+                placeholder={t(locale, "cart.notes")}
                 value={orderNotes}
                 onChange={(e) => setOrderNotes(e.target.value)}
                 className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-border-focus"
@@ -205,10 +208,10 @@ export function CartDrawer({
             </div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-text-primary">
-                Total: {formatItemPrice(total)}
+                {t(locale, "cart.total")} {formatItemPrice(total)}
               </p>
               <Button onClick={handlePlaceOrder} disabled={placingOrder}>
-                {placingOrder ? "Placing Order..." : "Place Order"}
+                {placingOrder ? t(locale, "cart.placingOrder") : t(locale, "cart.placeOrder")}
               </Button>
             </div>
           </div>

@@ -6,10 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function LoginPage(): React.ReactNode {
   const router = useRouter();
   const supabase = createClient();
+  const { locale } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,26 +42,26 @@ export default function LoginPage(): React.ReactNode {
   return (
     <Card className="p-6 sm:p-8">
       <CardHeader className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">Welcome back</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{t(locale, "auth.welcome")}</h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Sign in to manage your restaurant.
+          {t(locale, "auth.welcomeSub")}
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            label="Email"
+            label={t(locale, "auth.email")}
             type="email"
-            placeholder="you@restaurant.tn"
+            placeholder={t(locale, "auth.emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             disabled={loading}
           />
           <Input
-            label="Password"
+            label={t(locale, "auth.password")}
             type="password"
-            placeholder="Enter your password"
+            placeholder={t(locale, "auth.passwordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
@@ -88,10 +91,10 @@ export default function LoginPage(): React.ReactNode {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Signing in...
+                {t(locale, "auth.signingIn")}
               </span>
             ) : (
-              "Sign in"
+              t(locale, "auth.signIn")
             )}
           </Button>
         </form>

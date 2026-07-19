@@ -5,47 +5,46 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogActions } from "@/components/ui/dialog";
 import { formatItemPrice, timeAgo, cn } from "@/lib/utils";
+import { type Locale, t } from "@/lib/i18n";
 import type { Order } from "@/hooks/use-orders";
 
-const statusConfig: Record<
-  string,
-  { label: string; border: string; badge: string }
-> = {
-  pending: {
-    label: "Pending",
-    border: "border-l-status-error",
-    badge: "bg-status-error/10 text-status-error",
-  },
-  in_progress: {
-    label: "Preparing",
-    border: "border-l-status-warning",
-    badge: "bg-status-warning/10 text-status-warning",
-  },
-  ready: {
-    label: "Ready",
-    border: "border-l-status-success",
-    badge: "bg-status-success/10 text-status-success",
-  },
-  delivered: {
-    label: "Delivered",
-    border: "border-l-border",
-    badge: "bg-text-muted/10 text-text-muted",
-  },
-  cancelled: {
-    label: "Cancelled",
-    border: "border-l-border",
-    badge: "bg-text-muted/10 text-text-muted",
-  },
-};
+type StatusKey = "pending" | "in_progress" | "ready" | "delivered" | "cancelled";
+
+function getStatusBorder(key: StatusKey): string {
+  switch (key) {
+    case "pending":
+      return "border-l-status-error";
+    case "in_progress":
+      return "border-l-status-warning";
+    case "ready":
+      return "border-l-status-success";
+    default:
+      return "border-l-border";
+  }
+}
+
+function getStatusBadge(key: StatusKey): string {
+  switch (key) {
+    case "pending":
+      return "bg-status-error/10 text-status-error";
+    case "in_progress":
+      return "bg-status-warning/10 text-status-warning";
+    case "ready":
+      return "bg-status-success/10 text-status-success";
+    default:
+      return "bg-text-muted/10 text-text-muted";
+  }
+}
 
 type MyOrdersTabProps = {
   orders: Order[];
   loading: boolean;
   error: string | null;
   sessionId: string | null;
+  locale: Locale;
 };
 
-export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabProps) {
+export function MyOrdersTab({ orders, loading, error, sessionId, locale }: MyOrdersTabProps) {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
@@ -66,12 +65,12 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
       });
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error ?? "Failed to cancel order");
+        throw new Error(json.error ?? t(locale, "order.failedToCancel"));
       }
       setCancellingId(null);
       setCancelReason("");
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : "Failed to cancel");
+      setCancelError(err instanceof Error ? err.message : t(locale, "order.failedToCancel"));
     } finally {
       setCancelling(false);
     }
@@ -88,7 +87,9 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
   if (error) {
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-20 text-center">
-        <p className="text-lg font-semibold text-text-primary">Something went wrong</p>
+        <p className="text-lg font-semibold text-text-primary">
+          {t(locale, "order.somethingWrong")}
+        </p>
         <p className="text-sm text-text-secondary">{error}</p>
       </div>
     );
@@ -97,9 +98,9 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-20 text-center">
-        <p className="text-lg font-semibold text-text-primary">No orders yet</p>
+        <p className="text-lg font-semibold text-text-primary">{t(locale, "order.noOrders")}</p>
         <p className="text-sm text-text-secondary">
-          Your orders will appear here once you place one.
+          {t(locale, "order.noOrdersDesc")}
         </p>
       </div>
     );
@@ -108,7 +109,7 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
   return (
     <div className="mx-auto max-w-2xl space-y-3 px-4 py-4">
       {orders.map((order) => {
-        const config = statusConfig[order.status] ?? statusConfig.delivered;
+        const config = { border: getStatusBorder(order.status as StatusKey), badge: getStatusBadge(order.status as StatusKey) };
         const orderTotal = order.order_items.reduce(
           (sum: number, item) => sum + item.subtotal,
           0
@@ -124,11 +125,11 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
                     config.badge
                   )}
                 >
-                  {config.label}
+                  {t(locale, "order.status." + order.status)}
                 </span>
               </div>
               <span className="whitespace-nowrap text-xs text-text-muted">
-                {timeAgo(order.created_at)}
+                {timeAgo(order.created_at, locale)}
               </span>
             </div>
 
@@ -149,7 +150,7 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
             </div>
 
             <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
-              <span className="text-xs text-text-secondary">Total</span>
+              <span className="text-xs text-text-secondary">{t(locale, "order.total")}</span>
               <span className="text-sm font-semibold text-text-primary">
                 {formatItemPrice(orderTotal)}
               </span>
@@ -162,7 +163,7 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
                   className="h-auto px-0 text-xs text-status-error hover:text-status-error"
                   onClick={() => setCancellingId(order.id)}
                 >
-                  Cancel order
+                  {t(locale, "order.cancel")}
                 </Button>
               </div>
             )}
@@ -179,14 +180,14 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
             setCancelError(null);
           }
         }}
-        title="Cancel Order"
+        title={t(locale, "order.cancelTitle")}
       >
         <p className="text-sm text-text-secondary">
-          Are you sure you want to cancel this order?
+          {t(locale, "order.cancelConfirm")}
         </p>
         <input
           type="text"
-          placeholder="Reason (optional)"
+          placeholder={t(locale, "order.cancelReason")}
           value={cancelReason}
           onChange={(e) => setCancelReason(e.target.value)}
           maxLength={200}
@@ -205,14 +206,14 @@ export function MyOrdersTab({ orders, loading, error, sessionId }: MyOrdersTabPr
             }}
             disabled={cancelling}
           >
-            Keep order
+            {t(locale, "order.keepOrder")}
           </Button>
           <Button
             variant="danger"
             onClick={handleCancel}
             disabled={cancelling}
           >
-            {cancelling ? "Cancelling..." : "Cancel Order"}
+            {cancelling ? t(locale, "order.cancelling") : t(locale, "order.cancelTitle")}
           </Button>
         </DialogActions>
       </Dialog>
