@@ -147,6 +147,7 @@ export type CancelReasonCode = z.infer<typeof cancelReasonCodeSchema>;
 export const updateOrderStatusSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("in_progress") }),
   z.object({ status: z.literal("ready") }),
+  z.object({ status: z.literal("delivered") }),
   z.object({
     status: z.literal("cancelled"),
     reason_code: cancelReasonCodeSchema,

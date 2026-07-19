@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getStaffTenantAndLocation } from "@/lib/api-helpers";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
@@ -51,14 +52,6 @@ async function closeSessionAsTimedOut(admin: AdminClient, sessionId: string) {
     .eq("id", sessionId);
 }
 
-/**
- * Returns the active session for a table, or null if there isn't one.
- * If an "active" session is found but has exceeded the location's timeout,
- * it is lazily closed here and treated as if it didn't exist — this is what
- * previously only happened when an order/event was placed on that specific
- * session, which meant a fresh scan of the same table could surface a
- * long-departed customer's stale session as "active".
- */
 async function getLiveActiveSession(
   admin: AdminClient,
   tableId: string,
@@ -252,12 +245,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createErr) {
-      // Another request created the active session for this table in the
-      // window between our check above and this insert (e.g. two people at
-      // the same table scanning within milliseconds of each other). The
-      // partial unique index on sessions(table_id) WHERE status='active'
-      // rejects our insert — fetch and hand back the session that won the
-      // race instead of surfacing an error.
       if (createErr.code === UNIQUE_VIOLATION) {
         const winner = await getLiveActiveSession(admin, table.id, sessionTimeout);
         if (winner) {
@@ -299,4 +286,42 @@ export async function POST(request: NextRequest) {
     { error: "Unknown action", code: "VALIDATION_ERROR" },
     { status: 400 }
   );
+}
+
+export async function GET(request: NextRequest) {
+  const locationId = request.nextUrl.searchParams.get("location_id");
+
+  if (!locationId) {
+    return NextResponse.json(
+      { error: "Missing location_id", code: "VALIDATION_ERROR" },
+      { status: 400 }
+    );
+  }
+
+  const { locationId: staffLocationId, supabase, error } =
+    await getStaffTenantAndLocation();
+  if (error) return error;
+
+  if (staffLocationId !== locationId) {
+    return NextResponse.json(
+      { error: "Forbidden", code: "FORBIDDEN" },
+      { status: 403 }
+    );
+  }
+
+  const { data: sessions, error: sessionsErr } = await supabase
+    .from("sessions")
+    .select("*, tables(label)")
+    .eq("location_id", staffLocationId)
+    .eq("status", "active")
+    .order("started_at", { ascending: true });
+
+  if (sessionsErr) {
+    return NextResponse.json(
+      { error: "Failed to fetch sessions", code: "DB_ERROR" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ data: sessions ?? [] });
 }

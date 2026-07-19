@@ -11,7 +11,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 | Phase 1 — Foundation | ✅ Complete |
 | Phase 2 — Data Layer | ✅ Complete |
 | Phase 3 — Customer Product | 🟡 In progress |
-| Phase 4 — Operations | 🟡 In progress — Clear Table (07) and KDS (08) done, Floor Staff App (09) not started |
+| Phase 4 — Operations | ✅ Complete |
 | Phase 5 — Management | 🔲 Not started |
 
 ---
@@ -38,9 +38,11 @@ _Read this at the start of every session before doing anything else. Keep it cur
 
 ---
 
+- 09. Floor Staff App (Live Feed + Session History) — Mobile-optimized `/floor/[locationId]` with two tabs: Live Feed (merged real-time list of events + order notifications, 5 card types, oldest-first sort, action buttons per type) and Session History (active sessions with expandable order details, running totals, Clear Table button). Web Audio alert on new feed items (triangle-wave pulse, distinct from KDS chime). i18n complete (AR/FR/EN). API: new `GET /api/events`, `PATCH /api/events/[id]`, `GET /api/sessions`. Extended `PATCH /api/orders/[id]` with `ready → delivered` transition. New migration `017_floor_update_policy.sql` for floor UPDATE RLS on orders. Added `?all=true` to `GET /api/orders` for unrestricted status filter.
+
 ## Up Next
 
-- 09. Floor Staff App (Live Feed + Session History) — note: Clear Table already exists on the dashboard, this task is really "give floor staff their own live feed + move/duplicate that button"
+- 10. Admin Dashboard (Live Orders + Analytics)
 
 ---
 

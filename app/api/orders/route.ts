@@ -11,9 +11,6 @@ export async function GET(request: NextRequest) {
   const locationId = request.nextUrl.searchParams.get("location_id");
 
   if (locationId) {
-    // Staff-authenticated path (KDS). The caller's own location_id comes
-    // from the `staff` table, not from the query param — the param is only
-    // used to make the intent explicit in the request.
     const { locationId: staffLocationId, supabase, error } =
       await getStaffTenantAndLocation();
     if (error) return error;
@@ -25,15 +22,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const fetchAll = request.nextUrl.searchParams.get("all") === "true";
+
     const readyCutoff = new Date(Date.now() - READY_STALE_MS).toISOString();
 
-    const { data: orders, error: ordersErr } = await supabase
+    let ordersQuery = supabase
       .from("orders")
       .select("*, order_items(*), tables(label)")
-      .eq("location_id", staffLocationId)
-      .in("status", KDS_STATUSES)
-      .or(`status.neq.ready,updated_at.gte.${readyCutoff}`)
-      .order("created_at", { ascending: true });
+      .eq("location_id", staffLocationId);
+
+    if (!fetchAll) {
+      ordersQuery = ordersQuery
+        .in("status", KDS_STATUSES)
+        .or(`status.neq.ready,updated_at.gte.${readyCutoff}`);
+    }
+
+    const { data: orders, error: ordersErr } = await ordersQuery.order(
+      "created_at",
+      { ascending: true }
+    );
 
     if (ordersErr) {
       return NextResponse.json(

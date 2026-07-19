@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createTableEventSchema } from "@/lib/validators";
+import { getStaffTenantAndLocation } from "@/lib/api-helpers";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -133,4 +134,42 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ data: event }, { status: 201 });
+}
+
+export async function GET(request: NextRequest) {
+  const locationId = request.nextUrl.searchParams.get("location_id");
+
+  if (!locationId) {
+    return NextResponse.json(
+      { error: "Missing location_id", code: "VALIDATION_ERROR" },
+      { status: 400 }
+    );
+  }
+
+  const { locationId: staffLocationId, supabase, error } =
+    await getStaffTenantAndLocation();
+  if (error) return error;
+
+  if (staffLocationId !== locationId) {
+    return NextResponse.json(
+      { error: "Forbidden", code: "FORBIDDEN" },
+      { status: 403 }
+    );
+  }
+
+  const { data: events, error: eventsErr } = await supabase
+    .from("table_events")
+    .select("*, sessions(customer_name), tables(label)")
+    .eq("location_id", staffLocationId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (eventsErr) {
+    return NextResponse.json(
+      { error: "Failed to fetch events", code: "DB_ERROR" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ data: events ?? [] });
 }

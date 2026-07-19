@@ -209,7 +209,7 @@ export function Sidebar({ staffLocationId }: SidebarProps) {
               <ul className="space-y-1">
                 {staffItems.map((item) => {
                   const isActive = pathname.startsWith(item.href.split("/").slice(0, 2).join("/"));
-                  const isBuilt = item.href.startsWith("/kds/");
+                    const isBuilt = item.href.startsWith("/kds/") || item.href.startsWith("/floor/");
                   return (
                     <li key={item.href}>
                       <Link

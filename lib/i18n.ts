@@ -8,6 +8,7 @@ const labels: LabelMap = {
   ar: {
     /** Common */
     "common.cancel": "إلغاء",
+    "common.clear": "تفريغ",
     "common.save": "حفظ",
     "common.saving": "جاري الحفظ...",
     "common.delete": "حذف",
@@ -300,6 +301,35 @@ const labels: LabelMap = {
     "kds.retry": "إعادة المحاولة",
     "kds.failedToLoad": "فشل تحميل الطلبات",
 
+    /** Floor Staff */
+    "floor.subtitle": "التنبيهات الحية وسجل الجلسات",
+    "floor.tab.feed": "التنبيهات",
+    "floor.tab.sessions": "الجلسات",
+    "floor.feed.empty": "لا توجد تنبيهات",
+    "floor.feed.emptyDesc":
+      "ستظهر التنبيهات الجديدة هنا فور وصولها.",
+    "floor.card.resolve": "حل",
+    "floor.card.acknowledge": "تأكيد",
+    "floor.card.confirmDelivered": "تأكيد التسليم",
+    "floor.card.waiterCalled": "استدعاء نادل",
+    "floor.card.billRequested": "طلب فاتورة",
+    "floor.card.checkTable": "تحقق من الطاولة",
+    "floor.card.orderReady": "طلب جاهز",
+    "floor.card.orderCancelled": "طلب ملغي",
+    "floor.sessions.empty": "لا توجد جلسات نشطة",
+    "floor.sessions.emptyDesc":
+      "ستظهر الجلسات النشطة هنا عند إنشائها.",
+    "floor.session.total": "المجموع",
+    "floor.session.noOrders": "لا توجد طلبات بعد",
+    "floor.session.guest": "ضيف",
+    "floor.failedToLoad": "فشل تحميل البيانات",
+    "floor.failedResolve": "فشل حل التنبيه",
+    "floor.failedDeliver": "فشل تأكيد التسليم",
+    "floor.unmute": "تفعيل صوت التنبيهات",
+    "floor.mute": "كتم صوت التنبيهات",
+    "floor.resolving": "جاري الحل...",
+    "floor.delivering": "جاري تأكيد التسليم...",
+
     /** Time */
     "time.inAMoment": "بعد لحظة",
     "time.inMinutes": "بعد {n} د",
@@ -331,6 +361,7 @@ const labels: LabelMap = {
   fr: {
     /** Common */
     "common.cancel": "Annuler",
+    "common.clear": "Vider",
     "common.save": "Enregistrer",
     "common.saving": "Enregistrement...",
     "common.delete": "Supprimer",
@@ -649,6 +680,35 @@ const labels: LabelMap = {
     "kds.retry": "Réessayer",
     "kds.failedToLoad": "Échec du chargement des commandes",
 
+    /** Floor Staff */
+    "floor.subtitle": "Alertes en direct et historique des sessions",
+    "floor.tab.feed": "Alertes",
+    "floor.tab.sessions": "Sessions",
+    "floor.feed.empty": "Aucune alerte",
+    "floor.feed.emptyDesc":
+      "Les nouvelles alertes apparaîtront ici dès leur arrivée.",
+    "floor.card.resolve": "Résoudre",
+    "floor.card.acknowledge": "Acquitter",
+    "floor.card.confirmDelivered": "Confirmer livraison",
+    "floor.card.waiterCalled": "Appel serveur",
+    "floor.card.billRequested": "Demande d'addition",
+    "floor.card.checkTable": "Vérifier la table",
+    "floor.card.orderReady": "Commande prête",
+    "floor.card.orderCancelled": "Commande annulée",
+    "floor.sessions.empty": "Aucune session active",
+    "floor.sessions.emptyDesc":
+      "Les sessions actives apparaîtront ici une fois créées.",
+    "floor.session.total": "Total",
+    "floor.session.noOrders": "Pas encore de commande",
+    "floor.session.guest": "Invité",
+    "floor.failedToLoad": "Échec du chargement des données",
+    "floor.failedResolve": "Échec de la résolution",
+    "floor.failedDeliver": "Échec de la confirmation",
+    "floor.unmute": "Activer les alertes sonores",
+    "floor.mute": "Désactiver les alertes sonores",
+    "floor.resolving": "Résolution...",
+    "floor.delivering": "Confirmation...",
+
     /** Time */
     "time.inAMoment": "dans un instant",
     "time.inMinutes": "dans {n} min",
@@ -682,6 +742,7 @@ const labels: LabelMap = {
   en: {
     /** Common */
     "common.cancel": "Cancel",
+    "common.clear": "Clear",
     "common.save": "Save",
     "common.saving": "Saving...",
     "common.delete": "Delete",
@@ -982,6 +1043,35 @@ const labels: LabelMap = {
     "kds.keepOrder": "Keep order",
     "kds.retry": "Retry",
     "kds.failedToLoad": "Failed to load orders",
+
+    /** Floor Staff */
+    "floor.subtitle": "Live alerts & session history",
+    "floor.tab.feed": "Alerts",
+    "floor.tab.sessions": "Sessions",
+    "floor.feed.empty": "All clear",
+    "floor.feed.emptyDesc":
+      "New alerts will appear here the moment they come in.",
+    "floor.card.resolve": "Resolve",
+    "floor.card.acknowledge": "Acknowledge",
+    "floor.card.confirmDelivered": "Confirm Delivered",
+    "floor.card.waiterCalled": "Waiter Called",
+    "floor.card.billRequested": "Bill Requested",
+    "floor.card.checkTable": "Check Table",
+    "floor.card.orderReady": "Order Ready",
+    "floor.card.orderCancelled": "Order Cancelled",
+    "floor.sessions.empty": "No active sessions",
+    "floor.sessions.emptyDesc":
+      "Active sessions will appear here once created.",
+    "floor.session.total": "Total",
+    "floor.session.noOrders": "No orders yet",
+    "floor.session.guest": "Guest",
+    "floor.failedToLoad": "Failed to load data",
+    "floor.failedResolve": "Failed to resolve",
+    "floor.failedDeliver": "Failed to confirm delivery",
+    "floor.unmute": "Unmute floor alerts",
+    "floor.mute": "Mute floor alerts",
+    "floor.resolving": "Resolving...",
+    "floor.delivering": "Confirming delivery...",
 
     /** Time */
     "time.inAMoment": "in a moment",

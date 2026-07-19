@@ -5,6 +5,7 @@ import { updateOrderStatusSchema } from "@/lib/validators";
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   pending: ["in_progress", "cancelled"],
   in_progress: ["ready", "cancelled"],
+  ready: ["delivered"],
 };
 
 export async function PATCH(
