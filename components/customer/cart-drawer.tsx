@@ -48,7 +48,7 @@ export function CartDrawer({
             </span>
             <span className="text-sm font-semibold">{t(locale, "cart.viewCart", { count: itemCount })}</span>
             <span className="text-sm font-semibold">
-              {formatItemPrice(total)}
+              {formatItemPrice(total, locale)}
             </span>
           </div>
         </button>
@@ -112,7 +112,7 @@ export function CartDrawer({
                       {cartItem.name}
                     </p>
                     <p className="text-xs text-text-muted">
-                      {formatItemPrice(cartItem.price)} {t(locale, "cart.each")}
+                      {formatItemPrice(cartItem.price, locale)} {t(locale, "cart.each")}
                     </p>
                     {cartItem.notes && (
                       <p className="mt-0.5 text-xs italic text-text-secondary">
@@ -208,7 +208,7 @@ export function CartDrawer({
             </div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-text-primary">
-                {t(locale, "cart.total")} {formatItemPrice(total)}
+                {t(locale, "cart.total")} {formatItemPrice(total, locale)}
               </p>
               <Button onClick={handlePlaceOrder} disabled={placingOrder}>
                 {placingOrder ? t(locale, "cart.placingOrder") : t(locale, "cart.placeOrder")}

@@ -12,7 +12,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 | Phase 2 — Data Layer | ✅ Complete |
 | Phase 3 — Customer Product | ✅ Complete |
 | Phase 4 — Operations | ✅ Complete |
-| Phase 5 — Management | 🔲 Not started |
+| Phase 5 — Management | ✅ Complete |
 
 ---
 
@@ -40,10 +40,15 @@ _Read this at the start of every session before doing anything else. Keep it cur
 
 - 09. Floor Staff App (Live Feed + Session History) — Mobile-optimized `/floor/[locationId]` with two tabs: Live Feed (merged real-time list of events + order notifications, 5 card types, oldest-first sort, action buttons per type) and Session History (active sessions with expandable order details, running totals, Clear Table button). Web Audio alert on new feed items (triangle-wave pulse, distinct from KDS chime). i18n complete (AR/FR/EN). API: new `GET /api/events`, `PATCH /api/events/[id]`, `GET /api/sessions`. Extended `PATCH /api/orders/[id]` with `ready → delivered` transition. New migration `017_floor_update_policy.sql` for floor UPDATE RLS on orders. Added `?all=true` to `GET /api/orders` for unrestricted status filter.
 - 09b. Session conflict & location scope fixes — Renamed `check_needed` → `session_conflict` (migration 018, all code + floor app). Added confirmation gate in customer decline flow (ConfirmDialog between No and blocked). Dedup `session_conflict` events at POST /api/events. Added Clear Table (danger) button to feed card for `session_conflict` events. Fixed `getStaffTenantAndLocation()` return type (`string → string | null`) and patched all 8 API routes to skip location scoping for owners/multi-location managers.
+- 10. Admin Dashboard (Live Orders + Analytics) — Four sub-features built in one session:
+  - **10A Settings** — `app/(platform)/dashboard/settings/page.tsx` + `components/settings/settings-form.tsx`. Two-section form (Restaurant + Location), each with its own save button. ColorField pattern (native color picker + hex text input, locked to `{primary, accent}` shape for V1). `PATCH /api/tenants/[id]` (owner-only) and `PATCH /api/locations/[id]`. Brand colors validated server-side. Settings page reads from `getStaffRecord` and gates `canEdit` on owner/super_admin role.
+  - **10B Staff management** — `app/(platform)/dashboard/staff/page.tsx` + `components/staff/staff-manager.tsx`. New `lib/email.ts` (Resend wrapper, system template using i18n keys). `GET/POST /api/staff` and `PATCH/DELETE /api/staff/[id]`. Full invite flow: create staff row with auth_id NULL → generate JWT → send Resend email with trilingual template → copy-link fallback if email fails → resend → soft-deactivate via `is_active` toggle. Migration 019 adds `is_active BOOLEAN NOT NULL DEFAULT true` to staff and re-creates the `custom_access_token_hook` to filter inactive staff (so deactivated accounts can't sign in). Staff status badges: active (green), pending (amber, no auth_id yet), inactive (muted). Action buttons conditional on status: active → deactivate, inactive → activate, pending → resend + remove. Client maps `code` → translated `staff.error.*` keys (same pattern as `customer-shell.tsx`).
+  - **10C Live Orders** — `app/(platform)/dashboard/orders/page.tsx` + `components/orders/live-orders.tsx` + `hooks/use-live-orders.ts`. Extended `GET /api/orders` to accept `?tenant_id=` for owner-level view. Realtime subscription filtered by `tenant_id` (one channel per tenant). Orders grouped by location, then by table, oldest-first. Status left border (4px) + status badge in the card. `delivered` orders fade out after 30s (`DELIVERED_FADE_MS` constant, same pattern as KDS's 8s `ready` fade). Read-only, no action buttons.
+  - **10D Analytics** — `app/(platform)/dashboard/analytics/page.tsx` + `components/analytics/analytics-dashboard.tsx` + `app/api/analytics/route.ts`. Migration 020: PL/pgSQL function `generate_daily_snapshot(date, tenant_id)` that aggregates orders + order_items per location and upserts into `analytics_snapshots`. SECURITY DEFINER with caller-tenant check inside the function. Refuses to snapshot today (today is always live). The API lazily generates snapshots for the requested historical range on first read, then reads from snapshots. Top items + peak hours computed live from `order_items` (snapshots only store per-day top-5, too lossy for ranges). Added `recharts` to dependencies. UI: 4 stat cards (orders today, revenue today, avg order value, items sold) + range selector (7d/30d/90d) + Recharts `LineChart` (orders over time) + top items list + 24-square peak hours heatmap (hand-rolled CSS grid with intensity-scaled amber alpha). All colors via `var(--color-*)` tokens.
 
 ## Up Next
 
-- 10. Admin Dashboard (Live Orders + Analytics)
+- 11. Super Admin Panel
 
 ---
 

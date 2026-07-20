@@ -76,7 +76,9 @@ export default async function CustomerMenuPage({ params }: PageProps) {
       tenantName={tenant.name}
       tenantLogo={tenant.logo_url}
       tenantPlan={tenant.plan}
-      brandColors={tenant.brand_colors as Record<string, string>}
+      brandColors={
+        (tenant.brand_colors as Record<string, string> | null) ?? null
+      }
     />
   );
 }

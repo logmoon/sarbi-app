@@ -419,3 +419,115 @@ Last updated: 2026-07-19
 
 **Pattern notes:**
 Expandable accordion pattern for session history. Status badges use the same color scheme as order status badges elsewhere (pending=error, in_progress=warning, ready=success, others=muted). Clear Table uses ConfirmDialog (danger variant) matching the existing TablesManager pattern. Prices use `formatItemPrice()`.
+
+### SettingsForm
+
+File: `components/settings/settings-form.tsx`
+Last updated: 2026-07-20
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `mx-auto max-w-3xl space-y-6` (centered, capped width) |
+| Page title       | `text-2xl font-bold text-text-primary` + `text-sm text-text-secondary` subtitle |
+| Section card     | Uses `Card` component (unchanged) |
+| Section heading  | `text-lg font-semibold text-text-primary` |
+| Section gap      | `space-y-5` (form fields) |
+| Field label      | Reuses `Label` component (text-text-secondary, text-sm font-medium) |
+| Field helper     | `mt-1 text-xs text-text-muted` (under the input) |
+| Save button row  | `flex items-center justify-end` (single primary button) |
+| Save status      | `text-xs text-status-success` (saved) or `text-xs text-status-error` (failed) |
+| Preview block    | `rounded-sm border border-border bg-background p-4` |
+| Preview label    | `mb-3 text-xs font-medium uppercase tracking-wider text-text-muted` |
+| Preview swatches | `rounded-sm px-3 py-1.5 text-xs font-semibold text-white` with `style={{ backgroundColor }}` (inline, since these are user-defined values, not tokens) |
+
+**Pattern notes:**
+Each section (Restaurant, Location) is its own `Card` with its own save button — not one combined "Save all" button. Save states are per-section, so saving the restaurant name doesn't block the location form. Per-section success message auto-clears after 2s. The `canEdit` flag gates the entire form (read-only for non-owners). Page is `max-w-3xl` because settings is a focused form, not a wide grid like menu/tables.
+
+### ColorField
+
+File: `components/settings/settings-form.tsx` (inline subcomponent)
+Last updated: 2026-07-20
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | (just the field row) |
+| Color swatch     | `<input type="color">` with `h-10 w-12 rounded-sm border border-border bg-surface p-0.5 cursor-pointer disabled:opacity-50` |
+| Hex text input   | `flex-1 rounded-sm border bg-surface px-3 py-2 text-sm text-text-primary font-mono focus:ring-2 focus:ring-border-focus` |
+| Hex border (ok)  | `border-border` |
+| Hex border (bad) | `border-status-error` |
+| Hex change       | `onChange` uppercases the value from the color picker; hex text input allows free-typed input |
+
+**Pattern notes:**
+Two-input pattern: native color picker on the left (visual, swatches the value), hex text input on the right (precise, allows copy-paste of exact codes). Both stay in sync. Hex validation lives in the parent (`isValidHex` regex `^#[0-9A-Fa-f]{6}$`) — the Save button is disabled and the text input gets a red border when invalid. This is a general-purpose color-picker pattern — reuse it anywhere a tenant-defined color needs to be edited (future theme_config UI).
+
+### StaffManager
+
+File: `components/staff/staff-manager.tsx`
+Last updated: 2026-07-20
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | (page-level, no wrapper) |
+| Page header      | `mb-6 flex items-center justify-between` with title + subtitle on the left, primary action button on the right — same pattern as TablesManager |
+| Member card      | Uses `Card` component (no status border — different from Floor's FeedCard) |
+| Card content     | `flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between` |
+| Member name row  | `flex flex-wrap items-center gap-2` (name + status badge) |
+| Status badge     | `rounded-full px-2 py-0.5 text-xs font-medium` — active=success/10, pending=warning/10, inactive=muted/10 |
+| Role/location    | `mt-1 text-xs text-text-muted` with ` · ` separator |
+| Action buttons   | `flex flex-wrap gap-2`, all `variant="secondary"` `text-xs` |
+| Empty state      | Same icon-free pattern as TablesManager (title + desc + primary CTA) |
+| Error banner     | `mb-4 rounded-sm border border-status-error bg-status-error/10 p-3 text-sm text-status-error` with dismiss button — same convention as TablesManager |
+| Invite dialog    | Reuses `Dialog` + `DialogActions` from ui library |
+| Form inputs      | `Input` (email, name) + hand-rolled native `<select>` matching `Input` styling (border, ring, padding) |
+| Success result   | `rounded-sm border px-3 py-2 text-sm` with success/10 (green) or warning/10 (amber) variants based on email_sent flag |
+| Copy link input  | Native readonly `<input>` with monospace font, sits next to a `variant="secondary"` copy button |
+| ConfirmDialog    | Reused for "Remove Invite" (danger variant) |
+
+**Pattern notes:**
+Status is derived from `is_active` + `has_auth`: active = `is_active && has_auth`, pending = `is_active && !has_auth`, inactive = `!is_active`. Action buttons are conditional on status: active → deactivate, inactive → activate, pending → resend + remove. The same `Card`-based row layout is used for all three states (unlike Floor's FeedCard which uses status-color left borders) — staff list is meant to feel administrative, not alert-y. The invite result dialog shows the invite URL in a copyable input even on success, so the owner can grab it manually if needed; the email_sent flag controls the success-vs-warning banner tone above it. Role label is rendered via `t(locale, "staff.role.${role}")`; super_admin is rendered literally since it has no i18n key.
+
+### LiveOrders
+
+File: `components/orders/live-orders.tsx`
+Last updated: 2026-07-20
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | (page-level, no wrapper) |
+| Page header      | `mb-6` with title + subtitle, no top action button |
+| Group label      | `mb-2 text-sm font-semibold uppercase tracking-wider text-text-muted` (location name + order count) |
+| Grid             | `grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3` |
+| Card             | `Card` with `border-l-4` status-color override |
+| Status border    | pending=warning, in_progress=info, ready=success, delivered=muted, cancelled=error |
+| Card header      | `flex items-start justify-between gap-2` (table label + customer name on left, status badge on right) |
+| Status badge     | `rounded-full px-2 py-0.5 text-xs font-medium` (same color tokens as border) |
+| Items list       | `mt-3 space-y-1`, each row: qty + name + (notes in italic muted) + subtotal right-aligned |
+| Cancelled reason | `mt-2 rounded-sm bg-status-error/10 p-2 text-xs text-status-error` |
+| Order notes      | Same shape as cancelled reason, but `bg-background` + `italic text-text-secondary` |
+| Footer row       | `mt-3 flex items-center justify-between border-t border-border pt-2` (time-ago + total) |
+| Empty state      | Same Feather-style icon + title + desc pattern as other pages (40×40 SVG, centered) |
+| Loading          | Plain `text-text-muted` centered (no spinner — refresh is Realtime) |
+
+**Pattern notes:**
+Read-only view — no action buttons. Order cards follow the same status-left-border convention as TableCard and FeedCard but with the muted-info-warning color scheme (no special KDS dark variant). `delivered` orders fade out after 30s (DELIVERED_FADE_MS in `hooks/use-live-orders.ts`) — same pattern as KDS's 8s `ready` fade. Groups by location, then by table within each location; sort oldest-first. Uses `timeAgo()` from `lib/utils` for the footer. The data comes from a tenant-scoped `GET /api/orders?tenant_id=` (owner-level view) and a tenant-scoped Realtime subscription on the `orders` table filtered by `tenant_id`.
+
+### AnalyticsDashboard
+
+File: `components/analytics/analytics-dashboard.tsx`
+Last updated: 2026-07-20
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Page header      | `mb-6 flex flex-wrap items-center justify-between gap-2` with title + subtitle on the left, range selector on the right |
+| Range selector   | `flex gap-1 rounded-sm border border-border bg-surface p-0.5` with `bg-accent text-white` active and `text-text-secondary hover:bg-background` inactive — same pattern as the dashboard tab strip |
+| Stat grid        | `grid grid-cols-2 gap-3 sm:grid-cols-4` (2-col on mobile, 4 on desktop) |
+| Stat card        | `Card` with `text-xs font-medium uppercase tracking-wider text-text-muted` label + `text-2xl font-bold text-text-primary` value |
+| Chart card       | `Card` with section heading + Recharts `LineChart` inside `h-64 w-full` `ResponsiveContainer` |
+| Chart colors     | Stroke = `var(--color-accent)`, grid = `var(--color-border)`, axis text = `var(--color-text-muted)` — pulled from `:root` so they match the rest of the app |
+| Tooltip          | Custom content style with surface bg + border token, text-secondary label — matches card aesthetic |
+| Top items list   | `space-y-2` ordered list, rank number + name (truncate) + "{count} sold · {revenue}" |
+| Peak hours grid  | `grid grid-cols-12 gap-1` (24 squares, 2 per column? NO — 12 columns × 2 rows = 24 hours). Each cell is `aspect-square rounded-sm border border-border`, fill is amber `rgba()` with intensity-scaled alpha |
+| Empty state      | Plain `text-sm text-text-muted` paragraph (no icon) |
+
+**Pattern notes:**
+The "today" stats are always live-computed (no snapshot), the historical range uses lazily-generated daily snapshots (Postgres function `generate_daily_snapshot` in migration 020). Top items + peak hours are computed live from `order_items` for the full range (snapshots only store per-day top-5 which is too lossy to union across 90 days). Recharts is the only charting dependency — added to code-standards.md. The peak hours heatmap is hand-rolled CSS grid (24 squares) instead of a Recharts heatmap because (a) the data is a simple 24-element array and (b) we already have an RGB color scale logic that's easier to express inline. Chart colors use `var(--color-*)` tokens so they pick up brand overrides if the tenant later customizes them.

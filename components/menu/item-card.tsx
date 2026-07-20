@@ -70,7 +70,7 @@ export function ItemCard<T extends { id: string; name: Record<string, string>; p
       </div>
 
       <p className="shrink-0 text-sm font-semibold text-text-primary">
-        {formatPrice(item.price * 1000)}
+        {formatPrice(item.price * 1000, locale)}
       </p>
 
       <Switch

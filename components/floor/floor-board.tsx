@@ -219,7 +219,6 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
             dismissedOrderIds={dismissedOrderIds}
             actionLoadingId={actionLoadingId}
             onResolve={handleResolve}
-            onAcknowledgeEvent={handleResolve}
             onClearTable={handleFeedClearTableRequest}
             onConfirmDelivered={handleConfirmDelivered}
             onAcknowledgeCancelled={handleAcknowledgeCancelled}

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useCallback, useEffect } from "react";
+import { createContext, useState, useCallback, useEffect, useRef } from "react";
 import { type Locale } from "@/lib/i18n";
 
 type LocaleContextValue = {
@@ -30,8 +30,11 @@ export function LocaleProvider({
   initialLocale: Locale;
 }) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
+  const prevInitialRef = useRef<Locale | null>(null);
 
   useEffect(() => {
+    if (prevInitialRef.current === initialLocale) return;
+    prevInitialRef.current = initialLocale;
     const stored = getStoredLocale();
     if (stored && stored !== initialLocale) {
       setLocale(stored);

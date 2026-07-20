@@ -5,10 +5,17 @@ import { getStaffTenantAndLocation } from "@/lib/api-helpers";
 
 const KDS_STATUSES = ["pending", "in_progress", "ready"];
 const READY_STALE_MS = 2 * 60 * 1000; // exclude orders that went `ready` more than 2 min ago
+// Dashboard "live" view: 24h is wide enough to cover a full day of
+// cancellations but narrow enough that the list never accumulates
+// historical noise. Active orders (pending/in_progress/ready) inside
+// this window are always shown; delivered orders are gated separately
+// by READY_STALE_MS so they fade on the 30s client schedule.
+const DASHBOARD_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get("session_id");
   const locationId = request.nextUrl.searchParams.get("location_id");
+  const tenantIdParam = request.nextUrl.searchParams.get("tenant_id");
 
   if (locationId) {
     const { locationId: staffLocationId, supabase, error } =
@@ -39,6 +46,59 @@ export async function GET(request: NextRequest) {
       ordersQuery = ordersQuery
         .in("status", KDS_STATUSES)
         .or(`status.neq.ready,updated_at.gte.${readyCutoff}`);
+    }
+
+    const { data: orders, error: ordersErr } = await ordersQuery.order(
+      "created_at",
+      { ascending: true }
+    );
+
+    if (ordersErr) {
+      return NextResponse.json(
+        { error: "Failed to fetch orders", code: "DB_ERROR" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ data: orders ?? [] });
+  }
+
+  if (tenantIdParam) {
+    // Owner-level view: used by the dashboard Live Orders page for owners
+    // / super_admins / multi-location managers who have no single
+    // assigned location. RLS already restricts to the caller's tenant,
+    // but we also enforce the explicit tenantId check here as the
+    // primary defense (per invariant #1).
+    const { tenantId, locationId: staffLocationId, supabase, error } =
+      await getStaffTenantAndLocation();
+    if (error) return error;
+
+    if (tenantIdParam !== tenantId) {
+      return NextResponse.json(
+        { error: "Forbidden", code: "FORBIDDEN" },
+        { status: 403 }
+      );
+    }
+
+    // Without a time bound the dashboard would return every cancelled
+    // order the tenant has ever had. We constrain to the last 24 hours
+    // so the owner sees "what's happening now + what was cancelled
+    // during the day" but not historical noise from 11 days ago. The
+    // client groups active orders vs. recent cancellations for display.
+    const dashboardCutoff = new Date(
+      Date.now() - DASHBOARD_WINDOW_MS
+    ).toISOString();
+    const readyCutoff = new Date(Date.now() - READY_STALE_MS).toISOString();
+
+    let ordersQuery = supabase
+      .from("orders")
+      .select("*, order_items(*), tables(label), locations(name)")
+      .gte("created_at", dashboardCutoff)
+      .in("status", [...KDS_STATUSES, "delivered", "cancelled"])
+      .or(`status.neq.delivered,updated_at.gte.${readyCutoff}`);
+
+    if (staffLocationId !== null) {
+      ordersQuery = ordersQuery.eq("location_id", staffLocationId);
     }
 
     const { data: orders, error: ordersErr } = await ordersQuery.order(

@@ -156,3 +156,47 @@ export const updateOrderStatusSchema = z.discriminatedUnion("status", [
 ]);
 
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+
+// --- Settings ---
+
+const hexColor = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a 6-digit hex color (e.g. #F59E0B)");
+
+export const brandColorsSchema = z.object({
+  primary: hexColor,
+  // accent is optional. The current customer UI cascades from `primary`
+  // (which drives --color-accent, --color-accent-hover, etc. via
+  // lib/brand.ts), so accent is a no-op today. It's kept in the schema
+  // for forward-compat when a future theme wants the accent to be
+  // distinct from the primary.
+  accent: hexColor.optional(),
+});
+
+export const updateTenantSettingsSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  brand_colors: brandColorsSchema.optional(),
+});
+
+export type UpdateTenantSettingsInput = z.infer<typeof updateTenantSettingsSchema>;
+
+export const updateLocationSettingsSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  address: z.string().max(500).nullable().optional(),
+  session_timeout: z.number().int().min(5).max(720).optional(),
+});
+
+export type UpdateLocationSettingsInput = z.infer<typeof updateLocationSettingsSchema>;
+
+// --- Staff ---
+
+export const inviteStaffSchema = createInviteSchema.omit({ tenant_id: true });
+
+export type InviteStaffInput = z.infer<typeof inviteStaffSchema>;
+
+export const updateStaffSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("toggle_active"), is_active: z.boolean() }),
+  z.object({ action: z.literal("resend_invite") }),
+]);
+
+export type UpdateStaffInput = z.infer<typeof updateStaffSchema>;

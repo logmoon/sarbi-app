@@ -53,7 +53,7 @@ export function MenuItemCard({
         </div>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-sm font-semibold text-accent">
-            {formatItemPrice(item.price)}
+            {formatItemPrice(item.price, locale)}
           </span>
           <button
             onClick={(e) => {

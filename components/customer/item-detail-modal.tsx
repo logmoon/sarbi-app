@@ -62,7 +62,7 @@ export function ItemDetailModal({
         <p className="mb-4 text-sm text-text-secondary">{desc}</p>
       )}
       <p className="mb-4 text-lg font-semibold text-accent">
-        {formatItemPrice(item.price)}
+        {formatItemPrice(item.price, locale)}
       </p>
 
       <div className="mb-4">
@@ -125,7 +125,7 @@ export function ItemDetailModal({
           {t(locale, "common.cancel")}
         </Button>
         <Button onClick={handleAdd}>
-          {t(locale, "item.addToCart", { price: formatItemPrice(item.price * quantity) })}
+          {t(locale, "item.addToCart", { price: formatItemPrice(item.price * quantity, locale) })}
         </Button>
       </DialogActions>
     </Dialog>

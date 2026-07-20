@@ -115,7 +115,14 @@ export function Sidebar({ staffLocationId }: SidebarProps) {
     "/dashboard/settings": t(locale, "nav.settings"),
   };
 
-  const builtRoutes = ["/dashboard/menu", "/dashboard/tables"];
+  const builtRoutes = [
+    "/dashboard/menu",
+    "/dashboard/tables",
+    "/dashboard/orders",
+    "/dashboard/staff",
+    "/dashboard/analytics",
+    "/dashboard/settings",
+  ];
 
   return (
     <>

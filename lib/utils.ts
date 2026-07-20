@@ -6,19 +6,34 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(amountInMillimes: number): string {
-  if (!Number.isFinite(amountInMillimes)) return "0.000 TND";
+function intlLocale(locale?: Locale): string {
+  switch (locale) {
+    case "ar":
+      return "ar-TN";
+    default:
+      return "fr-TN";
+  }
+}
+
+export function formatPrice(amountInMillimes: number, locale?: Locale): string {
+  if (!Number.isFinite(amountInMillimes)) {
+    const fallback = locale === "ar" ? "0.000 د.ت" : "0.000 DT";
+    return fallback;
+  }
   const tnd = Math.max(0, amountInMillimes) / 1000;
-  return new Intl.NumberFormat("fr-TN", {
+  return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
     currency: "TND",
     minimumFractionDigits: 3,
   }).format(tnd);
 }
 
-export function formatItemPrice(price: number): string {
-  if (!Number.isFinite(price)) return "0.000 TND";
-  return new Intl.NumberFormat("fr-TN", {
+export function formatItemPrice(price: number, locale?: Locale): string {
+  if (!Number.isFinite(price)) {
+    const fallback = locale === "ar" ? "0.000 د.ت" : "0.000 DT";
+    return fallback;
+  }
+  return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
     currency: "TND",
     minimumFractionDigits: 3,

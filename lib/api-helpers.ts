@@ -103,6 +103,7 @@ export type StaffRole =
   | "floor";
 
 export type StaffRecord = {
+  staffId: string;
   tenantId: string;
   locationId: string | null;
   role: StaffRole;
@@ -121,13 +122,14 @@ export async function getStaffRecord(authId: string): Promise<StaffRecord | null
   const admin = createAdminClient();
   const { data: staff, error } = await admin
     .from("staff")
-    .select("tenant_id, location_id, role")
+    .select("id, tenant_id, location_id, role")
     .eq("auth_id", authId)
     .single();
 
   if (error || !staff) return null;
 
   return {
+    staffId: staff.id,
     tenantId: staff.tenant_id,
     locationId: staff.location_id,
     role: staff.role as StaffRole,

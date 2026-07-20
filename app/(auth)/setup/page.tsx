@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { t } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
 
 export default function SetupPage(): React.ReactNode {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
   const { locale } = useLanguage();
@@ -79,12 +78,11 @@ export default function SetupPage(): React.ReactNode {
     });
 
     if (signInError) {
-      router.push("/login");
+      window.location.href = "/login";
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    window.location.href = "/dashboard";
   }
 
   if (valid === null) {

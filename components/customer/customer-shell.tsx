@@ -8,6 +8,7 @@ import { useMenu, type MenuItem } from "@/hooks/use-menu";
 import { useOrders } from "@/hooks/use-orders";
 import { useEvents } from "@/hooks/use-events";
 import { t } from "@/lib/i18n";
+import { brandStyleVars, parseBrandColors } from "@/lib/brand";
 import { LanguageToggle } from "@/components/customer/language-toggle";
 import { NamePromptModal } from "@/components/customer/name-prompt-modal";
 import { AreYouWithModal } from "@/components/customer/are-you-with-modal";
@@ -28,7 +29,7 @@ type CustomerShellProps = {
   tenantName: string;
   tenantLogo: string | null;
   tenantPlan: string;
-  brandColors: Record<string, string>;
+  brandColors: Record<string, string> | null;
 };
 
 export function CustomerShell({
@@ -197,9 +198,12 @@ export function CustomerShell({
 
   const customerName = session.session?.customer_name;
 
-  const brandVars = Object.fromEntries(
-    Object.entries(brandColors).map(([key, val]) => [`--color-${key}`, val])
-  );
+  // brandStyleVars derives --color-accent, --color-accent-hover,
+  // --color-accent-light, --color-border-focus, --color-accent-dark from
+  // the owner's brand color. Without this, hover/focus/light variants on
+  // buttons and inputs fall back to the default Sarbi amber — see
+  // lib/brand.ts for the full rationale.
+  const brandVars = brandStyleVars(parseBrandColors(brandColors));
 
   if (blocked) {
     return (

@@ -13,7 +13,6 @@ type LiveFeedProps = {
   dismissedOrderIds: Set<string>;
   actionLoadingId: string | null;
   onResolve: (eventId: string) => void;
-  onAcknowledgeEvent: (eventId: string) => void;
   onClearTable: (eventId: string, sessionId: string) => void;
   onConfirmDelivered: (orderId: string) => void;
   onAcknowledgeCancelled: (orderId: string) => void;
@@ -91,7 +90,6 @@ export function LiveFeed({
   dismissedOrderIds,
   actionLoadingId,
   onResolve,
-  onAcknowledgeEvent,
   onClearTable,
   onConfirmDelivered,
   onAcknowledgeCancelled,

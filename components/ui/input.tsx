@@ -16,6 +16,7 @@ type InputProps = {
   step?: string;
   min?: string;
   max?: string;
+  required?: boolean;
 };
 
 export function Input({
@@ -34,6 +35,7 @@ export function Input({
   step,
   min,
   max,
+  required,
 }: InputProps): React.ReactNode {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
@@ -60,6 +62,7 @@ export function Input({
         step={step}
         min={min}
         max={max}
+        required={required}
         className={cn(
           "rounded-sm border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted",
           "focus:outline-none focus:ring-2 focus:ring-border-focus",

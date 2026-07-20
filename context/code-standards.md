@@ -112,6 +112,7 @@ Nothing added to `package.json` without updating this section.
 | `@upstash/ratelimit` | Rate limiting |
 | `resend` | Email sending |
 | `qrcode` | QR code generation |
+| `recharts` | Charts on the analytics dashboard |
 | `zod` | Input validation |
 | `clsx` | Conditional classnames |
 | `tailwind-merge` | Tailwind class deduplication |

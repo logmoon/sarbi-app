@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
 import { timeAgo, formatItemPrice } from "@/lib/utils";
+import { translateCancelReason } from "@/lib/cancel-reason";
 
 export type FeedItem =
   | {
@@ -67,19 +68,6 @@ function eventCardLabel(
   }
 }
 
-function translateCancelReason(reason: string, locale: "ar" | "fr" | "en"): string {
-  switch (reason) {
-    case "out_of_stock":
-      return t(locale, "kds.cancelReason.outOfStock");
-    case "kitchen_error":
-      return t(locale, "kds.cancelReason.kitchenError");
-    case "other":
-      return t(locale, "kds.cancelReason.other");
-    default:
-      return reason;
-  }
-}
-
 export function FeedCard({
   item,
   actionLoading,
@@ -134,7 +122,7 @@ export function FeedCard({
       {item.kind === "event" && item.eventType === "bill_requested" && item.runningTotal != null && (
         <p className="text-sm font-semibold text-accent">
           {t(locale, "floor.session.total")}:{" "}
-          {formatItemPrice(item.runningTotal)}
+          {formatItemPrice(item.runningTotal, locale)}
         </p>
       )}
 

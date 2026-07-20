@@ -143,7 +143,7 @@ export function MyOrdersTab({ orders, loading, error, sessionId, locale }: MyOrd
                     {item.quantity}x {item.item_name}
                   </span>
                   <span className="text-xs text-text-muted">
-                    {formatItemPrice(item.item_price)}
+                    {formatItemPrice(item.item_price, locale)}
                   </span>
                 </div>
               ))}
@@ -152,7 +152,7 @@ export function MyOrdersTab({ orders, loading, error, sessionId, locale }: MyOrd
             <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
               <span className="text-xs text-text-secondary">{t(locale, "order.total")}</span>
               <span className="text-sm font-semibold text-text-primary">
-                {formatItemPrice(orderTotal)}
+                {formatItemPrice(orderTotal, locale)}
               </span>
             </div>
 

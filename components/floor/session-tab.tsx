@@ -122,7 +122,7 @@ export function SessionTab({
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-accent">
-                  {formatItemPrice(session.total)}
+                  {formatItemPrice(session.total, locale)}
                 </span>
                 <svg
                   width="16"
@@ -171,7 +171,8 @@ export function SessionTab({
                               (order.order_items ?? []).reduce(
                                 (sum, oi) => sum + (oi.subtotal ?? 0),
                                 0
-                              )
+                              ),
+                              locale
                             )}
                           </span>
                         </div>
