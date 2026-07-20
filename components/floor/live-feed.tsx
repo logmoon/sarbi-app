@@ -14,6 +14,7 @@ type LiveFeedProps = {
   actionLoadingId: string | null;
   onResolve: (eventId: string) => void;
   onAcknowledgeEvent: (eventId: string) => void;
+  onClearTable: (eventId: string, sessionId: string) => void;
   onConfirmDelivered: (orderId: string) => void;
   onAcknowledgeCancelled: (orderId: string) => void;
   loading: boolean;
@@ -38,6 +39,7 @@ function buildFeedItems(
       customerName: ev.sessions?.customer_name ?? null,
       createdAt: ev.created_at,
       runningTotal,
+      clearTableSessionId: ev.type === "session_conflict" ? ev.session_id : undefined,
     };
   });
 
@@ -90,6 +92,7 @@ export function LiveFeed({
   actionLoadingId,
   onResolve,
   onAcknowledgeEvent,
+  onClearTable,
   onConfirmDelivered,
   onAcknowledgeCancelled,
   loading,
@@ -152,16 +155,21 @@ export function LiveFeed({
           item={item}
           actionLoading={actionLoadingId === item.id}
           onResolve={
-            item.kind === "event" && item.eventType !== "check_needed"
+            item.kind === "event" && item.eventType !== "session_conflict"
               ? () => onResolve(item.id)
               : undefined
           }
           onAcknowledge={
-            item.kind === "event" && item.eventType === "check_needed"
-              ? () => onAcknowledgeEvent(item.id)
+            item.kind === "event" && item.eventType === "session_conflict"
+              ? undefined
               : item.kind === "order_cancelled"
                 ? () => onAcknowledgeCancelled(item.id)
                 : undefined
+          }
+          onClearTable={
+            item.kind === "event" && item.eventType === "session_conflict"
+              ? onClearTable
+              : undefined
           }
           onConfirmDelivered={
             item.kind === "order_ready"

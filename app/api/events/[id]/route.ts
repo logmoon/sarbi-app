@@ -24,7 +24,8 @@ export async function PATCH(
     );
   }
 
-  if (event.location_id !== locationId) {
+  const isScopedToLocation = locationId !== null;
+  if (isScopedToLocation && event.location_id !== locationId) {
     return NextResponse.json(
       { error: "Forbidden", code: "FORBIDDEN" },
       { status: 403 }

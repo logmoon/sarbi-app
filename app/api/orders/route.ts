@@ -15,7 +15,8 @@ export async function GET(request: NextRequest) {
       await getStaffTenantAndLocation();
     if (error) return error;
 
-    if (staffLocationId !== locationId) {
+    const isScopedToLocation = staffLocationId !== null;
+    if (isScopedToLocation && staffLocationId !== locationId) {
       return NextResponse.json(
         { error: "Forbidden", code: "FORBIDDEN" },
         { status: 403 }
@@ -28,8 +29,11 @@ export async function GET(request: NextRequest) {
 
     let ordersQuery = supabase
       .from("orders")
-      .select("*, order_items(*), tables(label)")
-      .eq("location_id", staffLocationId);
+      .select("*, order_items(*), tables(label)");
+
+    if (isScopedToLocation) {
+      ordersQuery = ordersQuery.eq("location_id", staffLocationId);
+    }
 
     if (!fetchAll) {
       ordersQuery = ordersQuery

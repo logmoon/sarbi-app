@@ -10,6 +10,7 @@ import { SessionTab } from "@/components/floor/session-tab";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type FloorBoardProps = {
   locationId: string;
@@ -62,6 +63,10 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
   const [dismissedOrderIds, setDismissedOrderIds] = useState<Set<string>>(
     new Set()
   );
+  const [feedClearTarget, setFeedClearTarget] = useState<{
+    eventId: string;
+    sessionId: string;
+  } | null>(null);
 
   const {
     events,
@@ -124,6 +129,27 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
   const handleAcknowledgeCancelled = useCallback((orderId: string) => {
     setDismissedOrderIds((prev) => new Set(prev).add(orderId));
   }, []);
+
+  const handleFeedClearTableRequest = useCallback(
+    (eventId: string, sessionId: string) => {
+      setFeedClearTarget({ eventId, sessionId });
+    },
+    []
+  );
+
+  const handleFeedClearTableConfirm = useCallback(async () => {
+    if (!feedClearTarget) return;
+    const { eventId, sessionId } = feedClearTarget;
+    setFeedClearTarget(null);
+    setActionLoadingId(eventId);
+    try {
+      await clearTable(sessionId);
+    } catch {
+      // Session may already be closed — still resolve the event
+    }
+    await resolveEvent(eventId);
+    setActionLoadingId(null);
+  }, [feedClearTarget, clearTable, resolveEvent]);
 
   const combinedError = eventsError ?? ordersError ?? sessionsError;
   const combinedLoading = eventsLoading || ordersLoading || sessionsLoading;
@@ -194,6 +220,7 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
             actionLoadingId={actionLoadingId}
             onResolve={handleResolve}
             onAcknowledgeEvent={handleResolve}
+            onClearTable={handleFeedClearTableRequest}
             onConfirmDelivered={handleConfirmDelivered}
             onAcknowledgeCancelled={handleAcknowledgeCancelled}
             loading={combinedLoading}
@@ -208,6 +235,18 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
           />
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!feedClearTarget}
+        title={t(locale, "table.clearTableTitle")}
+        message={t(locale, "floor.feed.confirmClearDesc")}
+        onConfirm={handleFeedClearTableConfirm}
+        onClose={() => setFeedClearTarget(null)}
+        variant="danger"
+        confirmLabel={t(locale, "table.clearTable")}
+        loadingLabel={t(locale, "table.clearing")}
+        loading={feedClearTarget ? actionLoadingId === feedClearTarget.eventId : false}
+      />
     </div>
   );
 }

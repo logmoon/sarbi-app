@@ -23,13 +23,17 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const { data: session, error: fetchErr } = await supabase
+  let sessionQuery = supabase
     .from("sessions")
     .select("id, status")
     .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .eq("location_id", locationId)
-    .single();
+    .eq("tenant_id", tenantId);
+
+  if (locationId !== null) {
+    sessionQuery = sessionQuery.eq("location_id", locationId);
+  }
+
+  const { data: session, error: fetchErr } = await sessionQuery.single();
 
   if (fetchErr || !session) {
     return NextResponse.json(

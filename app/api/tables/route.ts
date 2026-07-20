@@ -16,7 +16,7 @@ export async function GET() {
   const { locationId, supabase, error } = await getStaffTenantAndLocation();
   if (error) return error;
 
-  const { data: tables, error: dbError } = await supabase
+  let tablesQuery = supabase
     .from("tables")
     .select(`
       *,
@@ -24,8 +24,13 @@ export async function GET() {
         id,
         closed_at
       )
-    `)
-    .eq("location_id", locationId)
+    `);
+
+  if (locationId !== null) {
+    tablesQuery = tablesQuery.eq("location_id", locationId);
+  }
+
+  const { data: tables, error: dbError } = await tablesQuery
     .order("label", { ascending: true });
 
   if (dbError) {
@@ -99,6 +104,13 @@ export async function POST(request: Request) {
     if (existing) continue;
 
     const qrCodeUrl = `${baseUrl}/${tenant?.slug ?? "unknown"}/table/${publicCode}`;
+
+    if (locationId === null) {
+      return NextResponse.json(
+        { error: "A location is required to create a table", code: "LOCATION_REQUIRED" },
+        { status: 400 }
+      );
+    }
 
     const { data: inserted, error: insertErr } = await supabase
       .from("tables")

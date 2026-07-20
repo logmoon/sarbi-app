@@ -127,7 +127,7 @@ export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 
 export const createTableEventSchema = z.object({
   session_id: z.string().uuid(),
-  type: z.enum(["waiter_called", "bill_requested", "check_needed"]),
+  type: z.enum(["waiter_called", "bill_requested", "session_conflict"]),
 });
 
 export type CreateTableEventInput = z.infer<typeof createTableEventSchema>;

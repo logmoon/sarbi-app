@@ -20,6 +20,7 @@ import { CartDrawer } from "@/components/customer/cart-drawer";
 import { OrderConfirmation } from "@/components/customer/order-confirmation";
 import { ActionButtons } from "@/components/customer/action-buttons";
 import { FullScreenMessage } from "@/components/customer/full-screen-message";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type CustomerShellProps = {
   tenantSlug: string;
@@ -51,6 +52,7 @@ export function CustomerShell({
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [showAreYouWith, setShowAreYouWith] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showConflictConfirm, setShowConflictConfirm] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [activeTab, setActiveTab] = useState<MenuTab>("menu");
   // True once the customer has declined "Are you with [name]?" — they are
@@ -107,9 +109,19 @@ export function CustomerShell({
 
   const handleDeclineSession = useCallback(async () => {
     setShowAreYouWith(false);
+    setShowConflictConfirm(true);
+  }, []);
+
+  const handleConflictConfirmed = useCallback(async () => {
+    setShowConflictConfirm(false);
     await session.declineSession();
     setBlocked(true);
   }, [session]);
+
+  const handleConflictCanceled = useCallback(() => {
+    setShowConflictConfirm(false);
+    setShowAreYouWith(true);
+  }, []);
 
   const handlePlaceOrder = useCallback(
     async (orderNotes: string) => {
@@ -323,6 +335,16 @@ export function CustomerShell({
           onNo={handleDeclineSession}
         />
       )}
+
+      <ConfirmDialog
+        open={showConflictConfirm}
+        title={t(locale, "customer.sessionConflictTitle")}
+        message={t(locale, "customer.sessionConflictDesc")}
+        onConfirm={handleConflictConfirmed}
+        onClose={handleConflictCanceled}
+        variant="primary"
+        confirmLabel={t(locale, "customer.sessionConflictYes")}
+      />
 
       <ItemDetailModal
         item={selectedItem}

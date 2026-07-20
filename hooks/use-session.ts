@@ -167,10 +167,11 @@ export function useSession(publicCode: string) {
   // Declining "Are you with [name]?" means this scanner is NOT part of the
   // existing session — so we deliberately do not join them into it. Doing
   // so would merge two unrelated parties' orders and bill into one session.
-  // Instead: fire a check_needed alert for staff and leave `session` unset,
-  // which the UI treats as a blocked state until staff clears the table
-  // (see customer-shell.tsx). This does not require a second concurrent
-  // session on the table — it just declines to guess who this scanner is.
+  // Instead: fire a session_conflict alert for staff and leave `session`
+  // unset, which the UI treats as a blocked state until staff clears the
+  // table (see customer-shell.tsx). This does not require a second
+  // concurrent session on the table — it just declines to guess who this
+  // scanner is.
   const declineSession = useCallback(async (): Promise<void> => {
     if (!existingSession) return;
     try {
@@ -179,7 +180,7 @@ export function useSession(publicCode: string) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_id: existingSession.id,
-          type: "check_needed",
+          type: "session_conflict",
         }),
       });
     } catch {

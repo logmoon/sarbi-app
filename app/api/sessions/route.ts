@@ -302,17 +302,23 @@ export async function GET(request: NextRequest) {
     await getStaffTenantAndLocation();
   if (error) return error;
 
-  if (staffLocationId !== locationId) {
+  const isScopedToLocation = staffLocationId !== null;
+  if (isScopedToLocation && staffLocationId !== locationId) {
     return NextResponse.json(
       { error: "Forbidden", code: "FORBIDDEN" },
       { status: 403 }
     );
   }
 
-  const { data: sessions, error: sessionsErr } = await supabase
+  let sessionsQuery = supabase
     .from("sessions")
-    .select("*, tables(label)")
-    .eq("location_id", staffLocationId)
+    .select("*, tables(label)");
+
+  if (isScopedToLocation) {
+    sessionsQuery = sessionsQuery.eq("location_id", staffLocationId);
+  }
+
+  const { data: sessions, error: sessionsErr } = await sessionsQuery
     .eq("status", "active")
     .order("started_at", { ascending: true });
 

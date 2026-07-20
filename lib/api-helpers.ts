@@ -48,7 +48,7 @@ export async function getStaffTenantId(): Promise<{
 
 export async function getStaffTenantAndLocation(): Promise<{
   tenantId: string;
-  locationId: string;
+  locationId: string | null;
   staffId: string;
   supabase: Awaited<ReturnType<typeof createClient>>;
   error?: NextResponse;

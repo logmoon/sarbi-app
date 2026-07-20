@@ -259,6 +259,12 @@ const labels: LabelMap = {
     "customer.areYouWithDesc":
       "هناك جلسة نشطة على هذه الطاولة. هل أنت مع {name}؟",
 
+    /** Session Conflict */
+    "customer.sessionConflictTitle": "تعارض الجلسة",
+    "customer.sessionConflictDesc":
+      "يبدو أن هناك تعارضاً في الجلسة على هذه الطاولة. هل تريد إبلاغ طاقم الصالة لحل المشكلة؟",
+    "customer.sessionConflictYes": "نعم، أبلغ الموظفين",
+
     /** Item Detail */
     "item.notes": "ملاحظات",
     "item.notesPlaceholder": "أي طلبات خاصة؟",
@@ -313,7 +319,7 @@ const labels: LabelMap = {
     "floor.card.confirmDelivered": "تأكيد التسليم",
     "floor.card.waiterCalled": "استدعاء نادل",
     "floor.card.billRequested": "طلب فاتورة",
-    "floor.card.checkTable": "تحقق من الطاولة",
+    "floor.card.sessionConflict": "تعارض الجلسة",
     "floor.card.orderReady": "طلب جاهز",
     "floor.card.orderCancelled": "طلب ملغي",
     "floor.sessions.empty": "لا توجد جلسات نشطة",
@@ -322,6 +328,7 @@ const labels: LabelMap = {
     "floor.session.total": "المجموع",
     "floor.session.noOrders": "لا توجد طلبات بعد",
     "floor.session.guest": "ضيف",
+    "floor.feed.confirmClearDesc": "سيتم إغلاق الجلسة الحالية في هذه الطاولة، مما يسمح للزبائن الجدد بتقديم الطلبات.",
     "floor.failedToLoad": "فشل تحميل البيانات",
     "floor.failedResolve": "فشل حل التنبيه",
     "floor.failedDeliver": "فشل تأكيد التسليم",
@@ -636,6 +643,12 @@ const labels: LabelMap = {
     "customer.areYouWithDesc":
       "Il y a une session active à cette table. Êtes-vous avec {name} ?",
 
+    /** Session Conflict */
+    "customer.sessionConflictTitle": "Conflit de Session",
+    "customer.sessionConflictDesc":
+      "Il semble y avoir un conflit de session à cette table. Prévenir le personnel de salle ?",
+    "customer.sessionConflictYes": "Oui, Prévenir",
+
     /** Item Detail */
     "item.notes": "Notes",
     "item.notesPlaceholder": "Des demandes spéciales ?",
@@ -692,7 +705,7 @@ const labels: LabelMap = {
     "floor.card.confirmDelivered": "Confirmer livraison",
     "floor.card.waiterCalled": "Appel serveur",
     "floor.card.billRequested": "Demande d'addition",
-    "floor.card.checkTable": "Vérifier la table",
+    "floor.card.sessionConflict": "Conflit de Session",
     "floor.card.orderReady": "Commande prête",
     "floor.card.orderCancelled": "Commande annulée",
     "floor.sessions.empty": "Aucune session active",
@@ -701,6 +714,7 @@ const labels: LabelMap = {
     "floor.session.total": "Total",
     "floor.session.noOrders": "Pas encore de commande",
     "floor.session.guest": "Invité",
+    "floor.feed.confirmClearDesc": "Ceci fermera la session en cours à cette table, permettant aux nouveaux clients de passer commande.",
     "floor.failedToLoad": "Échec du chargement des données",
     "floor.failedResolve": "Échec de la résolution",
     "floor.failedDeliver": "Échec de la confirmation",
@@ -1003,6 +1017,12 @@ const labels: LabelMap = {
     "customer.areYouWithDesc":
       "There is an active session at this table. Are you with {name}?",
 
+    /** Session Conflict */
+    "customer.sessionConflictTitle": "Table Conflict",
+    "customer.sessionConflictDesc":
+      "There appears to be a session conflict at this table. Notify floor staff to resolve?",
+    "customer.sessionConflictYes": "Yes, Notify Staff",
+
     /** Item Detail */
     "item.notes": "Notes",
     "item.notesPlaceholder": "Any special requests?",
@@ -1056,7 +1076,7 @@ const labels: LabelMap = {
     "floor.card.confirmDelivered": "Confirm Delivered",
     "floor.card.waiterCalled": "Waiter Called",
     "floor.card.billRequested": "Bill Requested",
-    "floor.card.checkTable": "Check Table",
+    "floor.card.sessionConflict": "Session Conflict",
     "floor.card.orderReady": "Order Ready",
     "floor.card.orderCancelled": "Order Cancelled",
     "floor.sessions.empty": "No active sessions",
@@ -1065,6 +1085,7 @@ const labels: LabelMap = {
     "floor.session.total": "Total",
     "floor.session.noOrders": "No orders yet",
     "floor.session.guest": "Guest",
+    "floor.feed.confirmClearDesc": "This will close the current session at this table, allowing new customers to order.",
     "floor.failedToLoad": "Failed to load data",
     "floor.failedResolve": "Failed to resolve",
     "floor.failedDeliver": "Failed to confirm delivery",

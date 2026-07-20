@@ -12,13 +12,17 @@ export async function PATCH(
 
   const { id } = await params;
 
-  const { data: existing } = await supabase
+  let tableCheckQuery = supabase
     .from("tables")
     .select("id")
     .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .eq("location_id", locationId)
-    .single();
+    .eq("tenant_id", tenantId);
+
+  if (locationId !== null) {
+    tableCheckQuery = tableCheckQuery.eq("location_id", locationId);
+  }
+
+  const { data: existing } = await tableCheckQuery.single();
 
   if (!existing) {
     return NextResponse.json(
@@ -69,13 +73,17 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const { data: existing } = await supabase
+  let delCheckQuery = supabase
     .from("tables")
     .select("id")
     .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .eq("location_id", locationId)
-    .single();
+    .eq("tenant_id", tenantId);
+
+  if (locationId !== null) {
+    delCheckQuery = delCheckQuery.eq("location_id", locationId);
+  }
+
+  const { data: existing } = await delCheckQuery.single();
 
   if (!existing) {
     return NextResponse.json(

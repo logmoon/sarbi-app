@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (type === "waiter_called" || type === "bill_requested") {
+  if (type === "waiter_called" || type === "bill_requested" || type === "session_conflict") {
     const { data: existing } = await admin
       .from("table_events")
       .select("id, metadata")
@@ -150,17 +150,23 @@ export async function GET(request: NextRequest) {
     await getStaffTenantAndLocation();
   if (error) return error;
 
-  if (staffLocationId !== locationId) {
+  const isScopedToLocation = staffLocationId !== null;
+  if (isScopedToLocation && staffLocationId !== locationId) {
     return NextResponse.json(
       { error: "Forbidden", code: "FORBIDDEN" },
       { status: 403 }
     );
   }
 
-  const { data: events, error: eventsErr } = await supabase
+  let eventsQuery = supabase
     .from("table_events")
-    .select("*, sessions(customer_name), tables(label)")
-    .eq("location_id", staffLocationId)
+    .select("*, sessions(customer_name), tables(label)");
+
+  if (isScopedToLocation) {
+    eventsQuery = eventsQuery.eq("location_id", staffLocationId);
+  }
+
+  const { data: events, error: eventsErr } = await eventsQuery
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 

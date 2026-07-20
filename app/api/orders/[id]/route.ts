@@ -34,12 +34,17 @@ export async function PATCH(
   // location_id is chained directly into every query below (not just
   // checked after the fact) — RLS is the backstop, this is the primary
   // defense per invariant #1.
-  const { data: order, error: orderErr } = await supabase
+  let orderQuery = supabase
     .from("orders")
     .select("id, status")
-    .eq("id", id)
-    .eq("location_id", locationId)
-    .single();
+    .eq("id", id);
+
+  const isScopedToLocation = locationId !== null;
+  if (isScopedToLocation) {
+    orderQuery = orderQuery.eq("location_id", locationId);
+  }
+
+  const { data: order, error: orderErr } = await orderQuery.single();
 
   if (orderErr || !order) {
     return NextResponse.json(
@@ -74,11 +79,16 @@ export async function PATCH(
     updatePayload.cancelled_by = staffId;
   }
 
-  const { data: updated, error: updateErr } = await supabase
+  let updateQuery = supabase
     .from("orders")
     .update(updatePayload)
-    .eq("id", id)
-    .eq("location_id", locationId)
+    .eq("id", id);
+
+  if (isScopedToLocation) {
+    updateQuery = updateQuery.eq("location_id", locationId);
+  }
+
+  const { data: updated, error: updateErr } = await updateQuery
     .select("*, order_items(*), tables(label)")
     .single();
 

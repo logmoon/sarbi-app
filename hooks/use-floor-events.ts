@@ -8,7 +8,7 @@ export type FloorEvent = {
   location_id: string;
   session_id: string | null;
   table_id: string;
-  type: "waiter_called" | "bill_requested" | "check_needed";
+  type: "waiter_called" | "bill_requested" | "session_conflict";
   status: "pending" | "resolved";
   metadata: Record<string, unknown>;
   created_at: string;

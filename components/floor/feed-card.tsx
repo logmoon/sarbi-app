@@ -11,11 +11,12 @@ export type FeedItem =
   | {
       kind: "event";
       id: string;
-      eventType: "waiter_called" | "bill_requested" | "check_needed";
+      eventType: "waiter_called" | "bill_requested" | "session_conflict";
       tableLabel: string;
       customerName: string | null;
       createdAt: string;
       runningTotal?: number;
+      clearTableSessionId?: string | null;
     }
   | {
       kind: "order_ready";
@@ -40,19 +41,20 @@ type FeedCardProps = {
   actionLoading?: boolean;
   onResolve?: (id: string) => void;
   onAcknowledge?: (id: string) => void;
+  onClearTable?: (eventId: string, sessionId: string) => void;
   onConfirmDelivered?: (id: string) => void;
 };
 
 const STATUS_BORDER: Record<string, string> = {
   waiter_called: "border-l-status-info",
   bill_requested: "border-l-status-warning",
-  check_needed: "border-l-border",
+  session_conflict: "border-l-border",
   order_ready: "border-l-status-success",
   order_cancelled: "border-l-status-error",
 };
 
 function eventCardLabel(
-  eventType: "waiter_called" | "bill_requested" | "check_needed",
+  eventType: "waiter_called" | "bill_requested" | "session_conflict",
   locale: "ar" | "fr" | "en"
 ): string {
   switch (eventType) {
@@ -60,8 +62,8 @@ function eventCardLabel(
       return t(locale, "floor.card.waiterCalled");
     case "bill_requested":
       return t(locale, "floor.card.billRequested");
-    case "check_needed":
-      return t(locale, "floor.card.checkTable");
+    case "session_conflict":
+      return t(locale, "floor.card.sessionConflict");
   }
 }
 
@@ -83,6 +85,7 @@ export function FeedCard({
   actionLoading,
   onResolve,
   onAcknowledge,
+  onClearTable,
   onConfirmDelivered,
 }: FeedCardProps) {
   const { locale } = useLanguage();
@@ -160,6 +163,18 @@ export function FeedCard({
             disabled={actionLoading}
           >
             {t(locale, "floor.card.resolve")}
+          </Button>
+        )}
+        {item.kind === "event" && item.clearTableSessionId && onClearTable && (
+          <Button
+            variant="danger"
+            className="flex-1 text-xs"
+            onClick={() => onClearTable(item.id, item.clearTableSessionId!)}
+            disabled={actionLoading}
+          >
+            {actionLoading
+              ? t(locale, "table.clearing")
+              : t(locale, "table.clearTable")}
           </Button>
         )}
         {item.kind === "event" && !onResolve && onAcknowledge && (
