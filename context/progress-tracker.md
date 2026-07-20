@@ -10,7 +10,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 |---|---|
 | Phase 1 — Foundation | ✅ Complete |
 | Phase 2 — Data Layer | ✅ Complete |
-| Phase 3 — Customer Product | 🟡 In progress |
+| Phase 3 — Customer Product | ✅ Complete |
 | Phase 4 — Operations | ✅ Complete |
 | Phase 5 — Management | 🔲 Not started |
 
@@ -39,6 +39,7 @@ _Read this at the start of every session before doing anything else. Keep it cur
 ---
 
 - 09. Floor Staff App (Live Feed + Session History) — Mobile-optimized `/floor/[locationId]` with two tabs: Live Feed (merged real-time list of events + order notifications, 5 card types, oldest-first sort, action buttons per type) and Session History (active sessions with expandable order details, running totals, Clear Table button). Web Audio alert on new feed items (triangle-wave pulse, distinct from KDS chime). i18n complete (AR/FR/EN). API: new `GET /api/events`, `PATCH /api/events/[id]`, `GET /api/sessions`. Extended `PATCH /api/orders/[id]` with `ready → delivered` transition. New migration `017_floor_update_policy.sql` for floor UPDATE RLS on orders. Added `?all=true` to `GET /api/orders` for unrestricted status filter.
+- 09b. Session conflict & location scope fixes — Renamed `check_needed` → `session_conflict` (migration 018, all code + floor app). Added confirmation gate in customer decline flow (ConfirmDialog between No and blocked). Dedup `session_conflict` events at POST /api/events. Added Clear Table (danger) button to feed card for `session_conflict` events. Fixed `getStaffTenantAndLocation()` return type (`string → string | null`) and patched all 8 API routes to skip location scoping for owners/multi-location managers.
 
 ## Up Next
 

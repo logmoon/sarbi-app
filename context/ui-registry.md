@@ -374,10 +374,10 @@ Last updated: 2026-07-19
 | Items list       | `text-sm text-text-secondary` (comma-separated "Qtyx Name") |
 | Cancel reason    | `text-sm text-text-secondary` (translated via `translateCancelReason()`) |
 | Action row       | `mt-1 flex gap-2` |
-| Action button    | `flex-1 text-xs` (primary for Resolve/ConfirmDelivered, secondary for Acknowledge) |
+| Action button    | `flex-1 text-xs` (primary for Resolve/ConfirmDelivered, secondary for Acknowledge, danger for Clear Table) |
 
 **Pattern notes:**
-FeedCard handles 5 card types via a discriminated union (`FeedItem`). Status-left-border convention (4px, color-coded) matches TableCard pattern. Event-based cards (waiter/bill/check) show Resolve button; order-based cards show ConfirmDelivered (ready) or Acknowledge (cancelled). Cancellation reason codes (`out_of_stock`, `kitchen_error`, `other`) are translated using existing `kds.cancelReason.*` i18n keys. Prices use `formatItemPrice()` from lib/utils, matching the customer cart convention.
+FeedCard handles 5 card types via a discriminated union (`FeedItem`). Status-left-border convention (4px, color-coded) matches TableCard pattern. Event-based cards (waiter/bill/check) show Resolve button; order-based cards show ConfirmDelivered (ready) or Acknowledge (cancelled). `session_conflict` events show a Clear Table button (danger variant) instead of Acknowledge when they carry a valid `session_id` — clicking it clears the session and resolves the event in one action via a ConfirmDialog. Cancellation reason codes (`out_of_stock`, `kitchen_error`, `other`) are translated using existing `kds.cancelReason.*` i18n keys. Prices use `formatItemPrice()` from lib/utils, matching the customer cart convention.
 
 ### LiveFeed
 
