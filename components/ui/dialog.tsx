@@ -27,6 +27,13 @@ export function Dialog({
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  // Callers typically pass `onClose={() => setOpen(false)}` inline, so its
+  // identity changes on every parent re-render (e.g. every keystroke in a
+  // form inside the dialog). Reading it through a ref — instead of putting
+  // it in the effect's dependency array — keeps the open/close-only effect
+  // below from re-running (and re-stealing focus) on unrelated re-renders.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const trapFocus = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Tab" || !dialogRef.current) return;
@@ -61,7 +68,7 @@ export function Dialog({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       trapFocus(e);
@@ -85,7 +92,10 @@ export function Dialog({
       document.body.style.overflow = "";
       previousFocusRef.current?.focus();
     };
-  }, [open, onClose, trapFocus]);
+    // Intentionally only re-runs on open/close transitions — see onCloseRef
+    // comment above for why onClose is deliberately excluded here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, trapFocus]);
 
   if (!open) return null;
 
@@ -109,7 +119,7 @@ export function Dialog({
       >
         {title && (
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-text-primary">
+            <h2 className="font-heading text-xl font-semibold text-text-primary">
               {title}
             </h2>
             <button

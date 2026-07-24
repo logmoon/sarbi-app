@@ -8,6 +8,23 @@ const RANGE_DAYS: Record<string, number> = {
   "90d": 90,
 };
 
+// Orders are timestamped in UTC, but "peak hours" only means anything in
+// the restaurant's local time — bucketing by UTC hour shifts every order
+// into the wrong slot by the local UTC offset. There's no per-tenant
+// timezone setting yet, so this is a fixed default for the app's current
+// market; if/when multi-region tenants are supported this should become a
+// `tenants.timezone` column read per-request instead.
+const RESTAURANT_TIMEZONE = "Africa/Tunis";
+
+function localHour(isoTimestamp: string): number {
+  const hourStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: RESTAURANT_TIMEZONE,
+    hour: "numeric",
+    hourCycle: "h23",
+  }).format(new Date(isoTimestamp));
+  return Number(hourStr);
+}
+
 type DailyPoint = {
   date: string;
   order_count: number;
@@ -37,7 +54,7 @@ function daysAgo(n: number): Date {
 }
 
 export async function GET(request: NextRequest) {
-  const { tenantId, locationId, error } = await getStaffTenantAndLocation();
+  const { tenantId, locationId, supabase, error } = await getStaffTenantAndLocation();
   if (error) return error;
 
   const range = request.nextUrl.searchParams.get("range") ?? "7d";
@@ -93,10 +110,16 @@ export async function GET(request: NextRequest) {
 
   // --- Lazy snapshot generation for the historical range (yesterday and
   //     earlier). Today is excluded by the function itself. We fire these
-  //     sequentially so the admin client doesn't deadlock.
+  //     sequentially so the client doesn't deadlock.
+  //     generate_daily_snapshot() re-derives the caller's tenant from
+  //     auth.uid() as a defense-in-depth check — that only resolves when
+  //     called through the caller's own session-scoped client. Calling it
+  //     via the admin/service-role client (no JWT, no auth.uid()) made the
+  //     check always fail, so no snapshot was ever written and every
+  //     historical day silently rendered as zero.
   for (let i = 1; i <= days; i++) {
     const date = isoDate(daysAgo(i));
-    const { error: snapErr } = await admin.rpc("generate_daily_snapshot", {
+    const { error: snapErr } = await supabase.rpc("generate_daily_snapshot", {
       p_date: date,
       p_tenant_id: tenantId,
     });
@@ -211,7 +234,7 @@ export async function GET(request: NextRequest) {
     topMap.set(name, existing);
 
     if (order.created_at) {
-      const hour = new Date(order.created_at).getUTCHours();
+      const hour = localHour(order.created_at);
       hourMap.set(hour, (hourMap.get(hour) ?? 0) + 1);
     }
   }

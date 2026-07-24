@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getStaffRecord } from "@/lib/api-helpers";
 import { redirect } from "next/navigation";
 import { SettingsForm, type SettingsData } from "@/components/settings/settings-form";
+import { parseMenuTheme } from "@/lib/brand";
+import { menuFontVariables } from "@/lib/fonts";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -14,7 +16,7 @@ export default async function SettingsPage() {
 
   const { data: tenant, error: tenantErr } = await supabase
     .from("tenants")
-    .select("id, name, slug, logo_url, brand_colors, plan")
+    .select("id, name, slug, logo_url, cover_url, brand_colors, plan")
     .eq("id", staff.tenantId)
     .single();
 
@@ -33,23 +35,26 @@ export default async function SettingsPage() {
   }
 
   // Defensive: brand_colors is JSONB, so we coerce whatever the DB has
-  // into the shape our settings form expects. If the owner stored
-  // nothing usable, fall back to the default Sarbi amber so the preview
-  // and customer page always have a defined color. Validation of the
-  // actual write path lives in lib/validators.ts#brandColorsSchema.
-  const stored = (tenant.brand_colors ?? {}) as { primary?: unknown };
-  const brandPrimary =
-    typeof stored.primary === "string" &&
-    /^#[0-9A-Fa-f]{6}$/.test(stored.primary)
-      ? stored.primary.toUpperCase()
-      : "#F59E0B";
+  // into the shape our settings form expects. If the owner stored nothing
+  // usable, fall back to the default Sarbi amber + defaults for every
+  // other theme knob, so the preview and customer page always have a
+  // fully-defined theme. Validation of the actual write path lives in
+  // lib/validators.ts#menuThemeSchema.
+  const theme = parseMenuTheme(tenant.brand_colors) ?? {
+    primary: "#F59E0B",
+    surface: "light" as const,
+    font: "modern" as const,
+    layout: "grid" as const,
+  };
 
   const data: SettingsData = {
     tenant: {
       id: tenant.id,
       name: tenant.name,
       slug: tenant.slug,
-      brand_colors: { primary: brandPrimary },
+      logo_url: tenant.logo_url,
+      cover_url: tenant.cover_url,
+      brand_colors: theme,
     },
     locations: (locations ?? []).map((loc) => ({
       id: loc.id,
@@ -60,5 +65,11 @@ export default async function SettingsPage() {
     canEdit: staff.role === "owner" || staff.role === "super_admin",
   };
 
-  return <SettingsForm data={data} />;
+  // menuFontVariables makes the curated heading-font presets available as
+  // CSS vars for the live preview — see lib/fonts.ts.
+  return (
+    <div className={menuFontVariables}>
+      <SettingsForm data={data} />
+    </div>
+  );
 }

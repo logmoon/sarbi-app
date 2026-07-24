@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -220,7 +223,7 @@ export function AnalyticsDashboard(props: AnalyticsDashboardProps) {
                 </h2>
               </CardHeader>
               <CardContent>
-                <PeakHoursGrid hours={data.peak_hours} />
+                <PeakHoursChart hours={data.peak_hours} locale={locale} />
               </CardContent>
             </Card>
           </div>
@@ -299,38 +302,97 @@ function OrdersChart({ series, locale }: { series: DailyPoint[]; locale: ReturnT
   );
 }
 
-function PeakHoursGrid({ hours }: { hours: PeakHour[] }) {
-  const max = hours.reduce((m, h) => Math.max(m, h.count), 0);
+function formatHourLabel(hour: number, locale: ReturnType<typeof useLanguage>["locale"]): string {
+  if (locale === "en") {
+    const period = hour < 12 ? "AM" : "PM";
+    const h12 = hour % 12 === 0 ? 12 : hour % 12;
+    return `${h12} ${period}`;
+  }
+  // ar/fr both conventionally use 24h clock in this market.
+  return `${hour}h`;
+}
+
+function PeakHoursChart({
+  hours,
+  locale,
+}: {
+  hours: PeakHour[];
+  locale: ReturnType<typeof useLanguage>["locale"];
+}) {
+  const byHour = new Map(hours.map((h) => [h.hour, h.count]));
+  const data = Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    label: formatHourLabel(hour, locale),
+    count: byHour.get(hour) ?? 0,
+  }));
+
+  const total = data.reduce((sum, d) => sum + d.count, 0);
+  const peak = data.reduce((best, d) => (d.count > best.count ? d : best), data[0]);
+  const tickHours = [0, 3, 6, 9, 12, 15, 18, 21];
+
+  if (total === 0) {
+    return (
+      <p className="text-sm text-text-muted">{t(locale, "analytics.noData")}</p>
+    );
+  }
 
   return (
     <div>
-      <div className="grid grid-cols-12 gap-1 gap-y-3">
-        {Array.from({ length: 24 }, (_, hour) => {
-          const cell = hours.find((h) => h.hour === hour);
-          const count = cell?.count ?? 0;
-          const intensity = max > 0 ? count / max : 0;
-          return (
-            <div
-              key={hour}
-              className="aspect-square rounded-sm border border-border"
-              style={{
-                backgroundColor:
-                  count === 0
-                    ? "var(--color-background)"
-                    : `rgba(245, 158, 11, ${0.15 + intensity * 0.85})`,
-              }}
-              title={`${hour}:00 — ${count} order${count === 1 ? "" : "s"}`}
+      <div className="h-56 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="label"
+              stroke="var(--color-text-muted)"
+              fontSize={12}
+              tickLine={false}
+              ticks={tickHours.map((h) => formatHourLabel(h, locale))}
+              interval={0}
             />
-          );
-        })}
+            <YAxis
+              stroke="var(--color-text-muted)"
+              fontSize={12}
+              tickLine={false}
+              allowDecimals={false}
+              width={28}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "6px",
+                fontSize: "12px",
+              }}
+              labelStyle={{ color: "var(--color-text-secondary)" }}
+              formatter={(value) => [
+                t(locale, "analytics.soldCount", { count: Number(value ?? 0) }),
+                "",
+              ]}
+            />
+            <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+              {data.map((d) => (
+                <Cell
+                  key={d.hour}
+                  fill={
+                    d.hour === peak.hour
+                      ? "var(--color-accent)"
+                      : "rgba(245, 158, 11, 0.35)"
+                  }
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
-      <div className="mt-1 flex items-center text-[10px] text-text-muted">
-        <span className="flex-1">0h</span>
-        <span className="flex-1 text-center">6h</span>
-        <span className="flex-1">12h</span>
-        <span className="flex-1 text-center">18h</span>
-        <span className="flex-1 text-right">23h</span>
-      </div>
+      {peak.count > 0 && (
+        <p className="mt-2 text-center text-xs text-text-secondary">
+          {t(locale, "analytics.peakHourSummary", {
+            label: peak.label,
+            count: peak.count,
+          })}
+        </p>
+      )}
     </div>
   );
 }

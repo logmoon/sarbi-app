@@ -28,6 +28,12 @@
   --color-border: #E5E7EB;
   --color-border-focus: #F59E0B;
 
+  /* Heading font — default matches body; overridden inline per-tenant on
+     the customer menu by lib/brand.ts#themeStyleVars for non-default font
+     presets. Admin surfaces never override this, so they always render
+     with Inter regardless of any tenant's menu theme. */
+  --font-heading: var(--font-inter), var(--font-noto-sans-arabic), sans-serif;
+
   /* KDS (fixed dark theme — always dark, independent of the rest of the app) */
   --color-kds-background: #111827;
   --color-kds-surface: #1F2937;

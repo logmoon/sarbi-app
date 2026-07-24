@@ -45,7 +45,7 @@ export default async function CustomerMenuPage({ params }: PageProps) {
 
   const { data: tenant, error: tenantErr } = await admin
     .from("tenants")
-    .select("id, name, slug, plan, logo_url, brand_colors")
+    .select("id, name, slug, plan, logo_url, cover_url, brand_colors")
     .eq("slug", tenantSlug)
     .single();
 
@@ -75,10 +75,9 @@ export default async function CustomerMenuPage({ params }: PageProps) {
       publicCode={publicCode}
       tenantName={tenant.name}
       tenantLogo={tenant.logo_url}
+      tenantCover={tenant.cover_url}
       tenantPlan={tenant.plan}
-      brandColors={
-        (tenant.brand_colors as Record<string, string> | null) ?? null
-      }
+      theme={tenant.brand_colors}
     />
   );
 }

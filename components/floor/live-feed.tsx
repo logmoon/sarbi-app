@@ -10,7 +10,6 @@ import type { FloorOrder } from "@/hooks/use-floor-orders";
 type LiveFeedProps = {
   events: FloorEvent[];
   feedOrders: FloorOrder[];
-  dismissedOrderIds: Set<string>;
   actionLoadingId: string | null;
   onResolve: (eventId: string) => void;
   onClearTable: (eventId: string, sessionId: string) => void;
@@ -22,8 +21,7 @@ type LiveFeedProps = {
 
 function buildFeedItems(
   events: FloorEvent[],
-  feedOrders: FloorOrder[],
-  dismissedOrderIds: Set<string>
+  feedOrders: FloorOrder[]
 ): FeedItem[] {
   const eventItems: FeedItem[] = events.map((ev): FeedItem => {
     const runningTotal =
@@ -43,7 +41,6 @@ function buildFeedItems(
   });
 
   const orderItems: FeedItem[] = feedOrders
-    .filter((o) => !dismissedOrderIds.has(o.id))
     .flatMap((o): FeedItem[] => {
       const items: FeedItem[] = [];
       if (o.status === "ready") {
@@ -87,7 +84,6 @@ function buildFeedItems(
 export function LiveFeed({
   events,
   feedOrders,
-  dismissedOrderIds,
   actionLoadingId,
   onResolve,
   onClearTable,
@@ -99,8 +95,8 @@ export function LiveFeed({
   const { locale } = useLanguage();
 
   const feedItems = useMemo(
-    () => buildFeedItems(events, feedOrders, dismissedOrderIds),
-    [events, feedOrders, dismissedOrderIds]
+    () => buildFeedItems(events, feedOrders),
+    [events, feedOrders]
   );
 
   if (loading && feedItems.length === 0) {

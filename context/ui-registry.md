@@ -65,18 +65,21 @@ Input wraps label + field + error in a single component. Label is optional — w
 ### Dialog
 
 File: `components/ui/dialog.tsx`
-Last updated: 2026-07-09
+Last updated: 2026-07-22
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
 | Overlay          | `fixed inset-0 z-50 bg-black/50` |
 | Panel            | `max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg bg-surface p-5 shadow-lg` |
-| Title            | `text-xl font-semibold text-text-primary` |
+| Title            | `font-heading text-xl font-semibold text-text-primary` |
 | Close button     | `rounded-sm p-1 text-text-muted hover:bg-background hover:text-text-primary` |
 | Actions footer   | `mt-6 flex items-center justify-end gap-2` |
 
 **Pattern notes:**
-Dialog is portal-based with focus trap (Tab/Shift+Tab cycling). Escape closes. Clicking overlay closes. Previous focus restored on close. Title bar has close button on the right. DialogActions is a separate subcomponent for the action button row.
+Dialog renders in place in the React tree — it is **not** portal-based (no `createPortal`), just a `fixed`-positioned overlay/panel. This matters for theming: it's why CSS custom-property overrides set on the customer shell's root (`lib/brand.ts#themeStyleVars`) correctly cascade into every dialog/modal used on the customer menu (item detail, confirm dialogs) with no extra wiring — a portal to `document.body` would have escaped that scope entirely. Do not introduce a portal here without re-threading the theme vars onto the portal target.
+Has focus trap (Tab/Shift+Tab cycling). Escape closes. Clicking overlay closes. Previous focus restored on close. Title bar has close button on the right. DialogActions is a separate subcomponent for the action button row.
+`onClose` is read through an internal ref (`onCloseRef`), not included in the mount/focus effect's dependency array. Callers routinely pass an inline arrow (`onClose={() => setOpen(false)}`), which gets a new identity on every parent re-render — if that identity were a dependency, any parent re-render (e.g. a form's `onChange` firing on every keystroke) would re-run the "focus the first input" effect and yank focus away from whatever the user was actually typing in. This was a real, previously-shipped bug (staff invite form) fixed by moving to the ref pattern; don't reintroduce `onClose`/`trapFocus` into that effect's deps.
+Title always uses `font-heading`, not `font-sans` — safe everywhere (admin dialogs included) because `--font-heading` defaults to the same value as `--font-inter` unless a tenant-themed ancestor overrides it (see `ui-tokens.md` → "Menu Theme").
 
 ### Switch
 
@@ -160,29 +163,34 @@ Fixed 240px (`w-60`) on desktop, slides in from left on mobile with backdrop. Ac
 ### MenuItemCard
 
 File: `components/customer/menu-item-card.tsx`
-Last updated: 2026-07-09
+Last updated: 2026-07-22
 
-| Property         | Class / Value     |
-| ---------------- | ----------------- |
-| Background       | `bg-surface` (via Card) |
-| Border           | `border border-border` (via Card) |
-| Border radius    | `rounded-md` (via Card) |
-| Layout           | `flex gap-3 cursor-pointer` (horizontal: thumbnail | content) |
-| Image container  | `h-20 w-20 flex-shrink-0 overflow-hidden rounded-md` |
-| Item name        | `text-sm font-semibold text-text-primary` |
-| Item description | `text-xs text-text-secondary line-clamp-2` |
-| Price            | `text-sm font-semibold text-accent` |
-| Add button       | `h-8 w-8 rounded-full bg-accent text-white hover:bg-accent-hover` |
-| Unavailable dim  | `opacity-60` |
-| Hover state      | `hover:shadow-md` (via Card onClick) |
+`MenuItemCard` is a **dispatcher**, not a single design — it renders one of three internal variants based on the tenant's `layout` theme preset (`lib/brand.ts`'s `LayoutPreset`, defaulting to `"grid"`). The previous entry here described a single horizontal-thumbnail layout that no longer exists in the codebase (stale, predates this update) — all three current variants below replace it.
+
+| Variant | Layout | Image | Used when |
+| --- | --- | --- | --- |
+| `GridCard` (default) | 2-up grid, `flex flex-col`, `min-h-[230px]` | `h-28` full-width, top | `layout: "grid"` |
+| `CompactCard` | Single dense row, `flex items-center gap-3`, bordered, `last:border-b-0` | `h-12 w-12` thumbnail, leading | `layout: "compact"` |
+| `MagazineCard` | Single column, larger card, `flex flex-col` | `aspect-[16/10]` full-width, top | `layout: "magazine"` |
+
+Shared across all three:
+
+| Property | Class / Value |
+| --- | --- |
+| Card chrome | `bg-surface` / `border-border` / `rounded-md` (via `Card`, except `CompactCard` which is a plain bordered `<div>` row, not a `Card`) |
+| Item name | `font-heading text-sm font-semibold text-text-primary` (`text-base` in `MagazineCard`) — the only place the tenant's font preset shows up on this component |
+| Description | `text-xs`/`text-sm text-text-secondary`, `line-clamp-2`/`line-clamp-3` — **not** `font-heading` — body text always stays on the neutral font |
+| Price | `text-sm font-semibold text-accent` (`text-base` in `MagazineCard`) |
+| Add button | Circular accent button (`AddButton` subcomponent, `h-8 w-8` / `h-7 w-7` in `size="sm"` for `CompactCard`); `MagazineCard` uses a labeled pill button (`t(locale, "customer.addToOrder")`) instead, since it has room |
+| Unavailable dim | `opacity-60` |
 
 **Pattern notes:**
-MenuItemCard is the customer-facing menu item. Horizontal layout with optional 80×80 image thumbnail on the left. Price and + button are in a `justify-between` row at the bottom of the text column. The + button is always a circular 32×32 accent button. Unavailable items are dimmed 60%.
+The `layout` prop comes from `customer-shell.tsx`'s parsed theme (`parseMenuTheme(theme).layout`) and is threaded straight through — this component has no theme-reading logic of its own, it's a pure prop-driven view. The wrapping grid/list container className also switches on the same `layout` value in the consumer (`customer-shell.tsx` and `MenuThemePreview` both do this independently — see "Menu Theme System" below for the exact className-per-layout mapping, kept in sync in both places). Adding a fourth layout preset means: a new `LayoutPreset` union member (`lib/brand.ts`), a new variant function + dispatcher branch here, a new wrapper className branch in both consumers, and a new `settings.layout*` i18n key + `LAYOUT_OPTIONS` entry in `settings-form.tsx`.
 
 ### CategoryTabs
 
 File: `components/customer/category-tabs.tsx`
-Last updated: 2026-07-09
+Last updated: 2026-07-22
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
@@ -190,10 +198,10 @@ Last updated: 2026-07-09
 | Tab wrapper      | `flex gap-2 overflow-x-auto px-4 py-3` |
 | Tab active       | `bg-accent text-white` |
 | Tab inactive     | `bg-surface text-text-secondary hover:text-text-primary border border-border` |
-| Tab              | `whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors` |
+| Tab              | `font-heading whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors` |
 
 **Pattern notes:**
-Horizontal scrollable pill tabs. Active tab uses accent bg with white text. Inactive tabs are white with border. No shadow. Sticky below the page header so categories remain accessible while scrolling.
+Horizontal scrollable pill tabs. Active tab uses accent bg with white text. Inactive tabs are white with border. No shadow. Sticky below the page header so categories remain accessible while scrolling. Tab label uses `font-heading` (added alongside the tenant menu-theme font presets) — same rationale as `MenuItemCard`'s item name: it's a title-level label, not body text.
 
 ### LanguageToggle
 
@@ -239,6 +247,24 @@ Last updated: 2026-07-15
 
 **Pattern notes:**
 Full-page takeover for customer states where the menu itself can't be shown: inactive table (SSR, `app/(public)/[tenantSlug]/table/[publicCode]/page.tsx`) and blocked session after declining "Are you with [name]?" (client, `customer-shell.tsx`). No `"use client"` directive — safe to render from a server component directly. Takes an optional `action: { label, onClick }` for a retry affordance; omit for a terminal state with no next step. Reuse this instead of writing another one-off centered-message block — it was extracted specifically because that pattern already existed twice.
+
+### Account Deactivated Page
+
+File: `app/account-deactivated/page.tsx`
+Last updated: 2026-07-21
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6` |
+| Card             | `Card` (`w-full max-w-[400px] p-6 text-center sm:p-8`) |
+| Icon badge       | `mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-status-error/10`, error-colored circle-slash SVG |
+| Title            | `text-xl font-bold text-text-primary` |
+| Description      | `mt-2 text-sm text-text-secondary` |
+| Action button    | `mt-6 w-full`, disabled until sign-out completes |
+
+**Pattern notes:**
+Same "full-page takeover" family as `FullScreenMessage`, but **not** built on it and **must** be `"use client"` — it needs to call `supabase.auth.signOut()` (browser client) on mount before offering a way out. Deliberately lives outside both the `(auth)` and `(platform)` route groups: `(auth)/layout.tsx` redirects any request with a live session straight to `/dashboard`, and `(platform)/layout.tsx` is what sent the user here in the first place (no resolvable *active* staff record — see `getStaffRecord`'s doc comment in `lib/api-helpers.ts`). Landing back inside either group before the session is actually terminated would loop. The "Back to login" button stays disabled until the `signOut()` promise resolves, specifically to avoid a race where clicking through with a still-valid session bounces straight back via `(auth)/layout.tsx`'s check.
+This is a UX fix, not a data-access fix — RLS (via the JWT's `user_role` claim, nulled for inactive staff by the `custom_access_token_hook`) already prevented a deactivated account from reading/writing real tenant data. This page exists because, before it, a deactivated login either fell through to a blank-but-technically-still-there dashboard shell, or (briefly, mid-fix) a dashboard with a working nav bar and every API call failing with "Forbidden" — both confusing. Don't re-derive "is this user blocked" from anything other than `getStaffRecord` returning `null`; that function is already the single point where `is_active` is enforced.
 
 ### Cart Drawer
 
@@ -423,30 +449,67 @@ Expandable accordion pattern for session history. Status badges use the same col
 ### SettingsForm
 
 File: `components/settings/settings-form.tsx`
-Last updated: 2026-07-20
+Last updated: 2026-07-22
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
-| Container        | `mx-auto max-w-3xl space-y-6` (centered, capped width) |
+| Container        | `mx-auto max-w-5xl space-y-6` (centered, capped width — widened from `max-w-3xl` so the Menu Theme card's two-column controls/preview layout has room) |
 | Page title       | `text-2xl font-bold text-text-primary` + `text-sm text-text-secondary` subtitle |
 | Section card     | Uses `Card` component (unchanged) |
 | Section heading  | `text-lg font-semibold text-text-primary` |
-| Section gap      | `space-y-5` (form fields) |
+| Section gap      | `space-y-5` (form fields), `space-y-6` inside Menu Theme (more breathing room between control groups) |
 | Field label      | Reuses `Label` component (text-text-secondary, text-sm font-medium) |
 | Field helper     | `mt-1 text-xs text-text-muted` (under the input) |
-| Save button row  | `flex items-center justify-end` (single primary button) |
+| Save button row  | `flex items-center justify-end` (single primary button, one per section) |
 | Save status      | `text-xs text-status-success` (saved) or `text-xs text-status-error` (failed) |
-| Preview block    | `rounded-sm border border-border bg-background p-4` |
-| Preview label    | `mb-3 text-xs font-medium uppercase tracking-wider text-text-muted` |
-| Preview swatches | `rounded-sm px-3 py-1.5 text-xs font-semibold text-white` with `style={{ backgroundColor }}` (inline, since these are user-defined values, not tokens) |
+| Menu Theme layout| `grid gap-8 lg:grid-cols-2` — controls column on the start side, `MenuThemePreview` on the end side, stacks to one column below `lg` |
+| Preset button    | Shared look across surface/font/layout pickers: `rounded-sm border px-3 py-2.5 text-sm`, selected = `border-accent bg-accent-light text-accent-dark`, unselected = `border-border bg-surface text-text-primary hover:bg-background` |
+| Surface picker   | `grid grid-cols-3 gap-2` (6 options — a `flex` row was tried first and got cramped once the tone count grew past 3) — each button also shows a `h-6 w-6 rounded-full` color swatch above the label |
+| Font picker      | `grid grid-cols-2 gap-2` (4 options) — each button's own label is rendered `style={{ fontFamily: <that preset's CSS var> }}`, so the picker demonstrates itself |
+| Layout picker    | `flex gap-2` (3 options, plain text buttons — the adjacent live preview already shows the visual difference, so these don't need their own illustration) |
+| Upload fields    | `grid gap-4 sm:grid-cols-2` — Logo and Cover image, both `FileUpload` |
 
 **Pattern notes:**
-Each section (Restaurant, Location) is its own `Card` with its own save button — not one combined "Save all" button. Save states are per-section, so saving the restaurant name doesn't block the location form. Per-section success message auto-clears after 2s. The `canEdit` flag gates the entire form (read-only for non-owners). Page is `max-w-3xl` because settings is a focused form, not a wide grid like menu/tables.
+Three independent sections now, not two — Restaurant (name), **Menu Theme** (brand color, surface tone, font, layout, logo, cover image + live preview), and Location — each its own `Card` with its own save button. Per-section success message auto-clears after 2s. The `canEdit` flag gates the entire form (read-only for non-owners).
+The Menu Theme save button PATCHes `brand_colors: {primary, surface, font, layout}` plus `logo_url`/`cover_url` together in one request — all four theme fields always travel as a unit even though they're picked via separate controls, since they're all facets of the same `MenuTheme` shape (`lib/brand.ts`) and there's no reason to let them drift out of sync via partial saves.
+**Uploads are two-step, matching the existing menu-item-image pattern** (`components/menu/menu-editor.tsx`'s `handleUploadImage`): `FileUpload`'s own internal "confirm" button uploads straight to Supabase Storage (`menu-images` bucket, `logos/`/`covers/` prefix — same bucket as item images, no new storage policy needed) and returns the public URL immediately; that URL only reaches the database when the surrounding form's own Save button is clicked. Don't assume an uploaded image is persisted the moment `FileUpload` returns — it's just been staged in the local `logoUrl`/`coverUrl` state at that point.
+See "Menu Theme System" below for the cross-cutting design (why presets, not raw pickers).
+
+### MenuThemePreview
+
+File: `components/settings/menu-theme-preview.tsx`
+Last updated: 2026-07-22
+
+| Property         | Class / Value     |
+| ---------------- | ----------------- |
+| Container        | `overflow-hidden rounded-sm border border-border bg-background`, theme vars applied via inline `style` |
+| Cover slot       | `h-28 w-full overflow-hidden` (only rendered if a cover image is set) |
+| Header slot      | `flex items-center gap-2 border-b border-border bg-surface px-3 py-2.5` — logo + `font-heading` tenant name |
+| Category tabs    | Renders the real `CategoryTabs` component, not a mockup |
+| Items            | Renders the real `MenuItemCard` (whichever layout variant is selected), not a mockup |
+
+**Pattern notes:**
+This is a **live, realistic** preview, not an illustration — it composes the actual `CategoryTabs` and `MenuItemCard` components used on the real customer menu, fed 2 sample categories / 3 sample items with placeholder text (multi-locale, so it also respects the admin's current UI language) and an inline-SVG "food photo" placeholder (a plain fork/knife glyph — deliberately not a hotlinked stock photo, since this ships in the admin bundle). Because it reuses the real components, any future change to `MenuItemCard`/`CategoryTabs` automatically shows up correctly here with zero extra work — **do not build a second, simplified mock version of the menu UI for a future preview need; extend this component instead.** Takes the in-progress (unsaved) form state directly as props, so every keystroke/selection updates it immediately, before Save is ever clicked.
+
+### Menu Theme System
+
+Cross-cutting — not a single component. Files: `lib/brand.ts` (types + derivation), `lib/fonts.ts` (font loading), `app/(public)/layout.tsx` (font scoping), `components/customer/customer-shell.tsx` (cover banner + root style injection), `components/settings/settings-form.tsx` + `menu-theme-preview.tsx` (editing UI).
+Last updated: 2026-07-22
+
+**How a theme flows through the app:**
+1. Stored as one JSONB value: `tenants.brand_colors = { primary, surface, font, layout }` (plus the separate top-level columns `logo_url`/`cover_url`).
+2. `lib/brand.ts#parseMenuTheme(raw)` coerces it defensively — unrecognized/missing `surface`/`font`/`layout` each fall back to their own default independently (`"light"`/`"modern"`/`"grid"`) rather than invalidating the whole theme. Only a missing/invalid `primary` hex makes the whole theme `null`. This means an old tenant record saved before a new preset existed, or a preset that gets removed later, degrades safely instead of breaking rendering.
+3. `lib/brand.ts#themeStyleVars(theme)` turns that into a `CSSProperties` object: `--color-accent*` (derived from `primary` via simple RGB mixing — see the function for the darken/lighten math), the surface tone's background/surface/border overrides (see `ui-tokens.md`), and `--font-heading`.
+4. `customer-shell.tsx` applies that object as inline `style` on the customer menu's single root `<div>`. Every themed value cascades from there via ordinary CSS inheritance/custom-property scoping — **there is no portal anywhere in the customer menu's component tree** (verified when fixing the quantity-color bug below), which is what makes this "set it once at the root" approach work at all.
+5. `layout` (grid/compact/magazine) isn't a CSS var — it's a plain prop threaded from the parsed theme into `MenuItemCard`, which dispatches to the matching variant (see its own entry above).
+
+**Gotcha already hit once — CSS variable overrides do not retroactively affect an ancestor's already-inherited `color`.** `body`'s `color: var(--color-text-primary)` resolves once, at the `body` element, using whatever value is in scope *there* — a descendant div overriding the same custom property later does not change `body`'s own resolved value, and anything that inherits `color` without itself referencing the token again just inherits that stale root-level resolution. Concretely: two quantity `<span>`s (cart drawer, item detail modal) had no explicit color class at all and were silently stuck on light-theme black under the `dark` surface tone, because everything between them and `body` also had no explicit color class. Fixed by giving both spans `text-text-primary` directly. **Any new customer-facing text element must carry an explicit `text-*` (or `font-heading`) class — never rely on inheriting color/font through an ancestor chain that doesn't itself reference the token**, or it will silently ignore surface-tone/font theming.
+See `ui-tokens.md` → "Menu Theme" for the concrete preset values, and `ui-rules.md` → "Tenant Menu Theming" for why this stays a closed set of presets rather than free-form input.
 
 ### ColorField
 
 File: `components/settings/settings-form.tsx` (inline subcomponent)
-Last updated: 2026-07-20
+Last updated: 2026-07-22
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
@@ -458,7 +521,8 @@ Last updated: 2026-07-20
 | Hex change       | `onChange` uppercases the value from the color picker; hex text input allows free-typed input |
 
 **Pattern notes:**
-Two-input pattern: native color picker on the left (visual, swatches the value), hex text input on the right (precise, allows copy-paste of exact codes). Both stay in sync. Hex validation lives in the parent (`isValidHex` regex `^#[0-9A-Fa-f]{6}$`) — the Save button is disabled and the text input gets a red border when invalid. This is a general-purpose color-picker pattern — reuse it anywhere a tenant-defined color needs to be edited (future theme_config UI).
+Two-input pattern: native color picker on the left (visual, swatches the value), hex text input on the right (precise, allows copy-paste of exact codes). Both stay in sync. Hex validation lives in the parent (`isValidHex` regex `^#[0-9A-Fa-f]{6}$`) — the Save button is disabled and the text input gets a red border when invalid.
+Now lives inside the Menu Theme card (still the only free-color-value input in that card — surface/font/layout are all closed-set preset pickers, not more instances of this pattern). This is still the general-purpose color-picker pattern for the one place a tenant genuinely picks an arbitrary color; don't extend the same free-input approach to surface tone, font, or anything else — see "Menu Theme System" above.
 
 ### StaffManager
 
@@ -489,12 +553,13 @@ Status is derived from `is_active` + `has_auth`: active = `is_active && has_auth
 ### LiveOrders
 
 File: `components/orders/live-orders.tsx`
-Last updated: 2026-07-20
+Last updated: 2026-07-22
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
 | Container        | (page-level, no wrapper) |
 | Page header      | `mb-6` with title + subtitle, no top action button |
+| Filter bar       | Status pill row (`All`/`Pending`/`In Progress`/`Ready`/`Delivered`/`Cancelled`) + search input |
 | Group label      | `mb-2 text-sm font-semibold uppercase tracking-wider text-text-muted` (location name + order count) |
 | Grid             | `grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3` |
 | Card             | `Card` with `border-l-4` status-color override |
@@ -505,16 +570,21 @@ Last updated: 2026-07-20
 | Cancelled reason | `mt-2 rounded-sm bg-status-error/10 p-2 text-xs text-status-error` |
 | Order notes      | Same shape as cancelled reason, but `bg-background` + `italic text-text-secondary` |
 | Footer row       | `mt-3 flex items-center justify-between border-t border-border pt-2` (time-ago + total) |
+| History section  | Collapsible (`historyOpen` state, defaults **open**), toggle button with rotating chevron SVG, header text via `t(locale, "orders.historySection", {count})` |
+| History row      | `HistoryRow` — one row per delivered/cancelled order: table, customer name, status badge (or cancel reason in the badge slot instead of the status label), price (delivered only), relative time (`updated_at`, not `created_at`) |
 | Empty state      | Same Feather-style icon + title + desc pattern as other pages (40×40 SVG, centered) |
 | Loading          | Plain `text-text-muted` centered (no spinner — refresh is Realtime) |
 
 **Pattern notes:**
-Read-only view — no action buttons. Order cards follow the same status-left-border convention as TableCard and FeedCard but with the muted-info-warning color scheme (no special KDS dark variant). `delivered` orders fade out after 30s (DELIVERED_FADE_MS in `hooks/use-live-orders.ts`) — same pattern as KDS's 8s `ready` fade. Groups by location, then by table within each location; sort oldest-first. Uses `timeAgo()` from `lib/utils` for the footer. The data comes from a tenant-scoped `GET /api/orders?tenant_id=` (owner-level view) and a tenant-scoped Realtime subscription on the `orders` table filtered by `tenant_id`.
+Read-only view — no action buttons. Order cards follow the same status-left-border convention as TableCard and FeedCard but with the muted-info-warning color scheme (no special KDS dark variant). Groups by location, then by table within each location; sort oldest-first. Uses `timeAgo()` from `lib/utils` for the footer.
+**Filtering is unified, not per-section:** a single `filtered` memo (status filter + search) is computed first, then partitioned into `activeByLocation` (pending/in_progress/ready) and `history` (delivered/cancelled) — both views derive from the same filtered set. This replaced an earlier version where the "active" section had a hardcoded status allowlist independent of the selected filter, which meant picking the "Delivered" filter silently showed nothing (the active section excluded delivered orders no matter what, and there was no delivered section at all). Don't reintroduce a second, independently-filtered code path for any new section — derive it from the one `filtered` memo.
+**No client-side fade/removal of any kind.** An earlier version auto-removed `delivered` orders from local state 30 seconds after they arrived (`DELIVERED_FADE_MS` in `hooks/use-live-orders.ts`, mirroring the KDS's `ready`-card fade) — that's gone. This is the owner's full-day dashboard, not a kitchen queue; delivered/cancelled orders should stay visible (in History) for as long as the API returns them, which is the full 24h dashboard window (`DASHBOARD_WINDOW_MS`, not gated by the KDS's 2-minute `READY_STALE_MS` staleness window — that gating used to also (incorrectly) apply to `delivered` orders server-side, making them disappear ~2 minutes after completion regardless of the client-side fade).
+The data comes from a tenant-scoped `GET /api/orders?tenant_id=` (owner-level view) and a tenant-scoped Realtime subscription on the `orders` table filtered by `tenant_id`.
 
 ### AnalyticsDashboard
 
 File: `components/analytics/analytics-dashboard.tsx`
-Last updated: 2026-07-20
+Last updated: 2026-07-22
 
 | Property         | Class / Value     |
 | ---------------- | ----------------- |
@@ -526,8 +596,9 @@ Last updated: 2026-07-20
 | Chart colors     | Stroke = `var(--color-accent)`, grid = `var(--color-border)`, axis text = `var(--color-text-muted)` — pulled from `:root` so they match the rest of the app |
 | Tooltip          | Custom content style with surface bg + border token, text-secondary label — matches card aesthetic |
 | Top items list   | `space-y-2` ordered list, rank number + name (truncate) + "{count} sold · {revenue}" |
-| Peak hours grid  | `grid grid-cols-12 gap-1` (24 squares, 2 per column? NO — 12 columns × 2 rows = 24 hours). Each cell is `aspect-square rounded-sm border border-border`, fill is amber `rgba()` with intensity-scaled alpha |
+| Peak hours chart | Recharts `BarChart`, `h-56 w-full` `ResponsiveContainer`. 24 bars (one per hour), x-axis ticks only at `0,3,6,9,12,15,18,21` to avoid label crowding. Bars colored via per-bar `<Cell>`: `var(--color-accent)` for the single busiest hour, translucent amber (`rgba(245,158,11,0.35)`) for the rest. One-line callout below the chart (`t(locale, "analytics.peakHourSummary", {label, count})`) names the peak hour explicitly instead of making the reader find the tallest bar |
 | Empty state      | Plain `text-sm text-text-muted` paragraph (no icon) |
 
 **Pattern notes:**
-The "today" stats are always live-computed (no snapshot), the historical range uses lazily-generated daily snapshots (Postgres function `generate_daily_snapshot` in migration 020). Top items + peak hours are computed live from `order_items` for the full range (snapshots only store per-day top-5 which is too lossy to union across 90 days). Recharts is the only charting dependency — added to code-standards.md. The peak hours heatmap is hand-rolled CSS grid (24 squares) instead of a Recharts heatmap because (a) the data is a simple 24-element array and (b) we already have an RGB color scale logic that's easier to express inline. Chart colors use `var(--color-*)` tokens so they pick up brand overrides if the tenant later customizes them.
+The "today" stats are always live-computed (no snapshot), the historical range uses lazily-generated daily snapshots (Postgres function `generate_daily_snapshot` in migration 020, called through the caller's own session-scoped Supabase client — **not** the admin/service-role client, which has no `auth.uid()` and always failed the function's own internal tenant check; this silently zeroed out every historical day until fixed). Top items + peak hours are computed live from `order_items` for the full range (snapshots only store per-day top-5 which is too lossy to union across 90 days). Recharts is the only charting dependency — see `library-docs.md` → "Recharts" for the CSS-var-token styling pattern used by both charts on this page.
+**Peak hours used to be a hand-rolled 24-cell CSS grid, bucketed by `getUTCHours()`.** Replaced with the `BarChart` described above for two reasons: (1) a heatmap of 24 near-identical amber squares doesn't communicate "when" nearly as directly as bar height + an explicit peak-hour callout, and (2) bucketing by UTC hour was a real bug — it has no relationship to the restaurant's actual local schedule, so the "peak" appeared at whatever hour local lunch/dinner rush happens to fall at UTC. Hours are now bucketed via `Intl.DateTimeFormat` against a fixed `RESTAURANT_TIMEZONE` constant (`app/api/analytics/route.ts`) — there's no per-tenant timezone setting yet, so if multi-region tenants are ever supported this constant needs to become a real `tenants` column, not a wider justification for going back to UTC.

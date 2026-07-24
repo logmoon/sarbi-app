@@ -41,6 +41,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "var(--font-noto-sans-arabic)", "sans-serif"],
+        heading: ["var(--font-heading)", "var(--font-noto-sans-arabic)", "sans-serif"],
       },
       spacing: {
         "0.5": "2px",

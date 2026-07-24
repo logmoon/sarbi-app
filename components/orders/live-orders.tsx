@@ -54,7 +54,10 @@ const ACTIVE_STATUSES: ReadonlyArray<LiveOrder["status"]> = [
   "ready",
 ];
 
-const RECENT_CANCEL_WINDOW_MS = 2 * 60 * 60 * 1000;
+const HISTORY_STATUSES: ReadonlyArray<LiveOrder["status"]> = [
+  "delivered",
+  "cancelled",
+];
 
 function orderTotal(order: LiveOrder): number {
   return order.order_items.reduce(
@@ -76,18 +79,25 @@ export function LiveOrders({ tenantId }: LiveOrdersProps) {
   const { orders, loading, error } = useLiveOrders(tenantId);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(true);
 
   const hasFilters = statusFilter !== null || searchQuery.length > 0;
+
+  const filtered = useMemo(() => {
+    return orders.filter((order) => {
+      if (statusFilter !== null && order.status !== statusFilter) return false;
+      if (!matchesSearch(order, searchQuery)) return false;
+      return true;
+    });
+  }, [orders, statusFilter, searchQuery]);
 
   const activeByLocation = useMemo(() => {
     const byLocation = new Map<
       string,
       { name: string; orders: LiveOrder[] }
     >();
-    for (const order of orders) {
-      if (statusFilter !== null && order.status !== statusFilter) continue;
+    for (const order of filtered) {
       if (!ACTIVE_STATUSES.includes(order.status)) continue;
-      if (!matchesSearch(order, searchQuery)) continue;
       const locId = order.location_id;
       const locName = order.locations?.name ?? "Location";
       if (!byLocation.has(locId)) {
@@ -104,24 +114,18 @@ export function LiveOrders({ tenantId }: LiveOrdersProps) {
       groups.push({ id, name: group.name, orders: group.orders });
     });
     return groups;
-  }, [orders, statusFilter, searchQuery]);
+  }, [filtered]);
 
-  const recentCancellations = useMemo(() => {
-    const cutoff = Date.now() - RECENT_CANCEL_WINDOW_MS;
-    return orders
-      .filter(
-        (o) => {
-          if (statusFilter !== null && o.status !== statusFilter) return false;
-          if (!matchesSearch(o, searchQuery)) return false;
-          return o.status === "cancelled" &&
-            new Date(o.created_at).getTime() >= cutoff;
-        }
-      )
+  // Today's completed orders — delivered and cancelled — for the owner to
+  // review. Sorted most-recently-resolved first.
+  const history = useMemo(() => {
+    return filtered
+      .filter((o) => HISTORY_STATUSES.includes(o.status))
       .sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
-  }, [orders, statusFilter, searchQuery]);
+  }, [filtered]);
 
   return (
     <div>
@@ -202,7 +206,7 @@ export function LiveOrders({ tenantId }: LiveOrdersProps) {
         <div className="flex items-center justify-center py-16">
           <p className="text-text-muted">{t(locale, "orders.loading")}</p>
         </div>
-      ) : activeByLocation.length === 0 && recentCancellations.length === 0 ? (
+      ) : activeByLocation.length === 0 && history.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           {hasFilters ? (
             <>
@@ -285,22 +289,40 @@ export function LiveOrders({ tenantId }: LiveOrdersProps) {
             </section>
           )}
 
-          {recentCancellations.length > 0 && (
+          {history.length > 0 && (
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-muted">
-                {t(locale, "orders.cancellationsSection", {
-                  count: recentCancellations.length,
+              <button
+                onClick={() => setHistoryOpen((v) => !v)}
+                className="mb-3 flex w-full items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-text-muted hover:text-text-secondary"
+                aria-expanded={historyOpen}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={cn(
+                    "shrink-0 transition-transform",
+                    historyOpen ? "rotate-90" : ""
+                  )}
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+                {t(locale, "orders.historySection", {
+                  count: history.length,
                 })}
-              </h2>
-              <ul className="divide-y divide-border rounded-sm border border-border bg-surface">
-                {recentCancellations.map((order) => (
-                  <CancellationRow
-                    key={order.id}
-                    order={order}
-                    locale={locale}
-                  />
-                ))}
-              </ul>
+              </button>
+              {historyOpen && (
+                <ul className="divide-y divide-border rounded-sm border border-border bg-surface">
+                  {history.map((order) => (
+                    <HistoryRow key={order.id} order={order} locale={locale} />
+                  ))}
+                </ul>
+              )}
             </section>
           )}
         </div>
@@ -386,7 +408,7 @@ function OrderCard({
   );
 }
 
-function CancellationRow({
+function HistoryRow({
   order,
   locale,
 }: {
@@ -394,7 +416,11 @@ function CancellationRow({
   locale: ReturnType<typeof useLanguage>["locale"];
 }) {
   const tableLabel = order.tables?.label ?? t(locale, "orders.unknownTable");
-  const reason = translateCancelReason(order.cancelled_reason, locale);
+  const total = orderTotal(order);
+  const isCancelled = order.status === "cancelled";
+  const reason = isCancelled
+    ? translateCancelReason(order.cancelled_reason, locale)
+    : null;
 
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm">
@@ -402,11 +428,21 @@ function CancellationRow({
       {order.customer_name && (
         <span className="text-text-secondary">{order.customer_name}</span>
       )}
-      <span className="rounded-full bg-status-error/10 px-2 py-0.5 text-xs font-medium text-status-error">
-        {reason}
+      <span
+        className={cn(
+          "rounded-full px-2 py-0.5 text-xs font-medium",
+          STATUS_BADGE[order.status]
+        )}
+      >
+        {reason ?? t(locale, STATUS_LABEL[order.status])}
       </span>
+      {!isCancelled && (
+        <span className="text-xs text-text-secondary">
+          {formatItemPrice(total, locale)}
+        </span>
+      )}
       <span className="ms-auto text-xs text-text-muted">
-        {timeAgo(order.created_at, locale)}
+        {timeAgo(order.updated_at, locale)}
       </span>
     </li>
   );

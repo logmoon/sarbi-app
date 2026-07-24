@@ -1,8 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { getStaffRecord } from "@/lib/api-helpers";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 
+// This layout wraps /dashboard, /kds, /floor, and /superadmin — its only job
+// is the auth gate. Role-based "send this person to their own app" redirects
+// used to live here, keyed off a pathname comparison, but that meant every
+// route under this layout (including /kds and /floor themselves) re-ran the
+// same redirect check — a role mismatch on /floor would bounce to /floor
+// again, looping. That logic now lives in dashboard/layout.tsx, the only
+// place it should ever fire from, so /kds and /floor can't loop back into it.
 export default async function PlatformLayout({
   children,
 }: {
@@ -15,28 +21,22 @@ export default async function PlatformLayout({
     redirect("/login");
   }
 
-  // Role/location come from the `staff` table, never from `user.app_metadata`.
-  // The custom_access_token_hook (migration 004) writes `user_role` into the
-  // JWT's own claims, which `getUser()` does not surface — reading it off
-  // `app_metadata` here silently never matched, so kitchen/floor/super_admin
-  // staff were never redirected to their own app. See getStaffRecord().
+  // getStaffRecord only resolves an *active* staff row (see its own comment
+  // in lib/api-helpers.ts) — RLS already blocks a deactivated account from
+  // reading or writing real tenant data via the JWT's `user_role` claim, so
+  // this isn't closing a data leak. What it does do: react to deactivation
+  // immediately, rather than waiting for that claim to expire and refresh,
+  // and — the actual point of this check — give a real "no access" landing
+  // page instead of a dashboard shell with nothing behind it, or (for
+  // kitchen/floor) their own board rendering permanently empty with no
+  // explanation why.
+  //
+  // /account-deactivated lives outside this route group entirely (and
+  // outside (auth), which redirects any live session straight back to
+  // /dashboard) so redirecting here can't loop back into this same check.
   const staff = await getStaffRecord(user.id);
-  const role = staff?.role;
-  const currentPath = headers().get("x-pathname") ?? "";
-
-  if ((role === "kitchen" || role === "floor") && staff?.locationId) {
-    const target = role === "kitchen" ? "/kds" : "/floor";
-    const destination = `${target}/${staff.locationId}`;
-    // Guard against redirecting to the page the user is already on —
-    // without this, visiting that exact URL would redirect to itself
-    // on every request.
-    if (currentPath !== destination) {
-      redirect(destination);
-    }
-  }
-
-  if (role === "super_admin" && currentPath !== "/superadmin") {
-    redirect("/superadmin");
+  if (!staff) {
+    redirect("/account-deactivated");
   }
 
   return <>{children}</>;

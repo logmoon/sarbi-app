@@ -143,7 +143,7 @@ export function CartDrawer({
                           <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
                       </button>
-                      <span className="min-w-[20px] text-center text-sm">
+                      <span className="min-w-[20px] text-center text-sm text-text-primary">
                         {cartItem.quantity}
                       </span>
                       <button

@@ -79,6 +79,15 @@ Rules for building UI in this project. Must stay consistent across every compone
 
 ---
 
+## Tenant Menu Theming
+
+- The customer menu (only) is theme-able per tenant: brand color, background tone, heading font, and card layout — all via `tenants.brand_colors` JSONB, derived by `lib/brand.ts#themeStyleVars`. Admin/KDS/floor surfaces are never themed.
+- **Never expose a raw color picker, free-text font name, or custom CSS/HTML input to tenants.** Every knob is a curated, closed set of presets (surface tones, font pairings, layout variants) that a human designed and that always composes correctly with the rest of the design system. This is a deliberate ceiling: unlimited freedom produces some percentage of ugly/broken tenant menus, and free-form CSS/markup on a customer-facing page you serve is a real injection surface. Adding a new option means adding a new curated preset to `lib/brand.ts`'s enum + derivation map + `settings-form.tsx`'s options array + i18n labels — never widening the surface to arbitrary input.
+- A tenant-chosen heading font applies to **titles only** — restaurant name, category tab labels, item names, dialog titles (`font-heading` token). Descriptions, prices, and all other body/numeric text stay on the neutral body font (`font-sans` / Inter) regardless of theme, for legibility and Arabic-script fallback correctness. Do not extend a display font preset to paragraph or numeric text.
+- Any settings-page control that changes how the customer menu looks must be reflected in a live preview built from the *actual* rendering components (not a mockup) — see `MenuThemePreview` in `ui-registry.md`.
+
+---
+
 ## Do Nots
 
 - Never use raw Tailwind color classes (`bg-amber-500`, `text-gray-700`) — always use CSS variable tokens via `--color-*`

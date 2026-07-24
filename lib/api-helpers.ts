@@ -30,6 +30,7 @@ export async function getStaffTenantId(): Promise<{
     .from("staff")
     .select("tenant_id")
     .eq("auth_id", user.id)
+    .eq("is_active", true)
     .single();
 
   if (!staff) {
@@ -72,6 +73,7 @@ export async function getStaffTenantAndLocation(): Promise<{
     .from("staff")
     .select("id, tenant_id, location_id")
     .eq("auth_id", user.id)
+    .eq("is_active", true)
     .single();
 
   if (staffErr || !staff) {
@@ -117,6 +119,12 @@ export type StaffRecord = {
  * `user.app_metadata?.user_role` is always undefined. The `staff` table is
  * the single source of truth for role/location, consistent with every other
  * staff-authenticated route in this codebase.
+ *
+ * `is_active` is filtered here rather than left to the JWT claim: migration
+ * 019 nulls out `user_role` in the token for deactivated staff, but nothing
+ * in the app actually reads that claim (see above) — so without this
+ * filter, a deactivated account still resolves a full role/location here
+ * and keeps working everywhere this function gates access.
  */
 export async function getStaffRecord(authId: string): Promise<StaffRecord | null> {
   const admin = createAdminClient();
@@ -124,6 +132,7 @@ export async function getStaffRecord(authId: string): Promise<StaffRecord | null
     .from("staff")
     .select("id, tenant_id, location_id, role")
     .eq("auth_id", authId)
+    .eq("is_active", true)
     .single();
 
   if (error || !staff) return null;

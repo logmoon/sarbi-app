@@ -59,6 +59,9 @@ const labels: LabelMap = {
     "auth.setup.passwordPlaceholder": "6 أحرف على الأقل",
     "auth.wordmark": "سربي",
     "auth.tagline": "قوائم رقمية وطلب على الطاولة",
+    "accountDeactivated.title": "لم يعد لحسابك صلاحية الوصول",
+    "accountDeactivated.description": "يرجى التواصل مع مديرك لحل هذا الأمر.",
+    "accountDeactivated.backToLogin": "العودة لتسجيل الدخول",
 
     /** Navigation */
     "nav.menu": "القائمة",
@@ -196,6 +199,7 @@ const labels: LabelMap = {
     "customer.loadingDesc":
       "لقد أبلغنا طاقم العمل بوجودك — سيمرون للتحقق من الطاولة قريباً. يمكنك المحاولة مرة أخرى بعد ذلك.",
     "customer.tryAgain": "حاول مرة أخرى",
+    "customer.addToOrder": "أضف للطلب",
     "customer.tableUnavailable": "الطاولة غير متاحة",
     "customer.tableUnavailableDesc":
       "هذه الطاولة غير نشطة حالياً. يرجى طلب المساعدة من أحد الموظفين.",
@@ -386,6 +390,28 @@ const labels: LabelMap = {
     "settings.loading": "جاري تحميل الإعدادات...",
     "settings.failedToLoad": "فشل تحميل الإعدادات",
     "settings.invalidColor": "يجب أن يكون لون hex صالح (مثال: #F59E0B)",
+    "settings.menuTheme": "مظهر القائمة",
+    "settings.menuThemeDesc": "خصص شكل قائمتك كما يراها العملاء.",
+    "settings.surfaceTone": "درجة الخلفية",
+    "settings.surfaceLight": "فاتح",
+    "settings.surfaceWarm": "دافئ",
+    "settings.surfaceDark": "داكن",
+    "settings.surfaceSage": "أخضر فاتح",
+    "settings.surfaceBlush": "وردي فاتح",
+    "settings.surfaceSlate": "رمادي مائل للأزرق",
+    "settings.fontPreset": "نمط الخط",
+    "settings.fontModern": "عصري",
+    "settings.fontClassic": "كلاسيكي",
+    "settings.fontPlayful": "مرح",
+    "settings.fontBold": "جريء",
+    "settings.layoutStyle": "تخطيط القائمة",
+    "settings.layoutGrid": "شبكي",
+    "settings.layoutCompact": "قائمة مدمجة",
+    "settings.layoutMagazine": "مجلة",
+    "settings.logo": "الشعار",
+    "settings.coverImage": "صورة الغلاف",
+    "settings.livePreview": "معاينة مباشرة",
+    "settings.previewTenantNameFallback": "مطعمك",
 
     /** Staff */
     "staff.title": "الموظفون",
@@ -464,6 +490,7 @@ const labels: LabelMap = {
     "orders.unknownTable": "طاولة غير معروفة",
     "orders.activeSection": "نشطة ({count})",
     "orders.cancellationsSection": "الإلغاءات الأخيرة ({count})",
+    "orders.historySection": "سجل اليوم ({count})",
 
     /** Analytics */
     "analytics.title": "الإحصائيات",
@@ -483,6 +510,7 @@ const labels: LabelMap = {
     "analytics.loading": "جاري تحميل الإحصائيات...",
     "analytics.failedToLoad": "فشل تحميل الإحصائيات",
     "analytics.soldCount": "{count} مبيعات",
+    "analytics.peakHourSummary": "أكثر ساعات الازدحام: {label} — {count} طلب",
 
     /** Locale Names */
     "locale.ar": "العربية",
@@ -551,6 +579,9 @@ const labels: LabelMap = {
       "Au moins 6 caractères",
     "auth.wordmark": "Sarbi",
     "auth.tagline": "Menus numériques & commande à table",
+    "accountDeactivated.title": "Votre compte n'a plus accès",
+    "accountDeactivated.description": "Veuillez contacter votre responsable pour résoudre ce problème.",
+    "accountDeactivated.backToLogin": "Retour à la connexion",
 
     /** Navigation */
     "nav.menu": "Menu",
@@ -702,6 +733,7 @@ const labels: LabelMap = {
     "customer.loadingDesc":
       "Nous avons informé notre personnel de votre présence — ils passeront vérifier la table dans un instant. Vous pourrez réessayer une fois que ce sera réglé.",
     "customer.tryAgain": "Réessayer",
+    "customer.addToOrder": "Ajouter à la commande",
     "customer.tableUnavailable": "Table non disponible",
     "customer.tableUnavailableDesc":
       "Cette table est actuellement inactive. Veuillez demander l'aide d'un membre du personnel.",
@@ -904,6 +936,29 @@ const labels: LabelMap = {
     "settings.failedToLoad": "Échec du chargement des paramètres",
     "settings.invalidColor":
       "Doit être une couleur hex valide (ex: #F59E0B)",
+    "settings.menuTheme": "Thème du menu",
+    "settings.menuThemeDesc":
+      "Personnalisez l'apparence de votre menu pour les clients.",
+    "settings.surfaceTone": "Tonalité de fond",
+    "settings.surfaceLight": "Clair",
+    "settings.surfaceWarm": "Chaleureux",
+    "settings.surfaceDark": "Sombre",
+    "settings.surfaceSage": "Sauge",
+    "settings.surfaceBlush": "Rosé",
+    "settings.surfaceSlate": "Ardoise",
+    "settings.fontPreset": "Style de police",
+    "settings.fontModern": "Moderne",
+    "settings.fontClassic": "Classique",
+    "settings.fontPlayful": "Ludique",
+    "settings.fontBold": "Gras",
+    "settings.layoutStyle": "Mise en page",
+    "settings.layoutGrid": "Grille",
+    "settings.layoutCompact": "Liste compacte",
+    "settings.layoutMagazine": "Magazine",
+    "settings.logo": "Logo",
+    "settings.coverImage": "Image de couverture",
+    "settings.livePreview": "Aperçu en direct",
+    "settings.previewTenantNameFallback": "Votre restaurant",
 
     /** Staff */
     "staff.title": "Personnel",
@@ -991,6 +1046,7 @@ const labels: LabelMap = {
     "orders.unknownTable": "Table inconnue",
     "orders.activeSection": "Actives ({count})",
     "orders.cancellationsSection": "Annulations récentes ({count})",
+    "orders.historySection": "Historique du jour ({count})",
 
     /** Analytics */
     "analytics.title": "Statistiques",
@@ -1010,6 +1066,7 @@ const labels: LabelMap = {
     "analytics.loading": "Chargement des statistiques...",
     "analytics.failedToLoad": "Échec du chargement des statistiques",
     "analytics.soldCount": "{count} vendus",
+    "analytics.peakHourSummary": "Heure la plus chargée : {label} — {count} commandes",
 
     /** Locale Names */
     "locale.ar": "العربية",
@@ -1073,6 +1130,9 @@ const labels: LabelMap = {
       "At least 6 characters",
     "auth.wordmark": "Sarbi",
     "auth.tagline": "Digital menus & table ordering",
+    "accountDeactivated.title": "Your account no longer has access",
+    "accountDeactivated.description": "Please contact your manager to resolve this.",
+    "accountDeactivated.backToLogin": "Back to login",
 
     /** Navigation */
     "nav.menu": "Menu",
@@ -1218,6 +1278,7 @@ const labels: LabelMap = {
     "customer.loadingDesc":
       "We've let our staff know you're here — they'll be over to check the table shortly. You can try again once they've sorted it out.",
     "customer.tryAgain": "Try Again",
+    "customer.addToOrder": "Add to order",
     "customer.tableUnavailable": "Table Unavailable",
     "customer.tableUnavailableDesc":
       "This table is currently inactive. Please ask a staff member for assistance.",
@@ -1408,6 +1469,28 @@ const labels: LabelMap = {
     "settings.loading": "Loading settings...",
     "settings.failedToLoad": "Failed to load settings",
     "settings.invalidColor": "Must be a valid hex color (e.g. #F59E0B)",
+    "settings.menuTheme": "Menu theme",
+    "settings.menuThemeDesc": "Customize how your menu looks to customers.",
+    "settings.surfaceTone": "Background tone",
+    "settings.surfaceLight": "Light",
+    "settings.surfaceWarm": "Warm",
+    "settings.surfaceDark": "Dark",
+    "settings.surfaceSage": "Sage",
+    "settings.surfaceBlush": "Blush",
+    "settings.surfaceSlate": "Slate",
+    "settings.fontPreset": "Font style",
+    "settings.fontModern": "Modern",
+    "settings.fontClassic": "Classic",
+    "settings.fontPlayful": "Playful",
+    "settings.fontBold": "Bold",
+    "settings.layoutStyle": "Layout",
+    "settings.layoutGrid": "Grid",
+    "settings.layoutCompact": "Compact list",
+    "settings.layoutMagazine": "Magazine",
+    "settings.logo": "Logo",
+    "settings.coverImage": "Cover image",
+    "settings.livePreview": "Live preview",
+    "settings.previewTenantNameFallback": "Your Restaurant",
 
     /** Staff */
     "staff.title": "Staff",
@@ -1493,6 +1576,7 @@ const labels: LabelMap = {
     "orders.unknownTable": "Unknown table",
     "orders.activeSection": "Active ({count})",
     "orders.cancellationsSection": "Recent cancellations ({count})",
+    "orders.historySection": "Today's history ({count})",
 
     /** Analytics */
     "analytics.title": "Analytics",
@@ -1512,6 +1596,7 @@ const labels: LabelMap = {
     "analytics.loading": "Loading analytics...",
     "analytics.failedToLoad": "Failed to load analytics",
     "analytics.soldCount": "{count} sold",
+    "analytics.peakHourSummary": "Busiest around {label} — {count} orders",
 
     /** Locale Names */
     "locale.ar": "العربية",

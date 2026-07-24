@@ -60,9 +60,6 @@ function SoundOffIcon() {
 export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
   const { locale } = useLanguage();
   const [tab, setTab] = useState<Tab>("feed");
-  const [dismissedOrderIds, setDismissedOrderIds] = useState<Set<string>>(
-    new Set()
-  );
   const [feedClearTarget, setFeedClearTarget] = useState<{
     eventId: string;
     sessionId: string;
@@ -80,6 +77,7 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
     loading: ordersLoading,
     error: ordersError,
     confirmDelivered,
+    acknowledgeCancelled,
   } = useFloorOrders(locationId);
 
   const {
@@ -89,20 +87,23 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
     clearTable,
   } = useFloorSessions(locationId);
 
-  // Feed-relevant orders: ready + recently cancelled (last 30 min)
+  // Feed-relevant orders: ready + recently cancelled (last 30 min) that
+  // haven't been acknowledged yet. Acknowledgment is persisted on the
+  // order itself so it stays dismissed across refreshes and is shared
+  // across every screen watching this location, not just the one that
+  // acknowledged it.
   const feedOrders = useMemo(() => {
     const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
     return orders.filter(
       (o) =>
         o.status === "ready" ||
         (o.status === "cancelled" &&
+          !o.cancelled_acknowledged_at &&
           new Date(o.updated_at ?? o.created_at).getTime() > thirtyMinAgo)
     );
   }, [orders]);
 
-  const feedItemCount =
-    events.length +
-    feedOrders.filter((o) => !dismissedOrderIds.has(o.id)).length;
+  const feedItemCount = events.length + feedOrders.length;
 
   const { muted, toggleMute } = useFloorSound(feedItemCount);
 
@@ -126,9 +127,14 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
     [confirmDelivered]
   );
 
-  const handleAcknowledgeCancelled = useCallback((orderId: string) => {
-    setDismissedOrderIds((prev) => new Set(prev).add(orderId));
-  }, []);
+  const handleAcknowledgeCancelled = useCallback(
+    async (orderId: string) => {
+      setActionLoadingId(orderId);
+      await acknowledgeCancelled(orderId);
+      setActionLoadingId(null);
+    },
+    [acknowledgeCancelled]
+  );
 
   const handleFeedClearTableRequest = useCallback(
     (eventId: string, sessionId: string) => {
@@ -216,7 +222,6 @@ export function FloorBoard({ locationId, locationName }: FloorBoardProps) {
           <LiveFeed
             events={events}
             feedOrders={feedOrders}
-            dismissedOrderIds={dismissedOrderIds}
             actionLoadingId={actionLoadingId}
             onResolve={handleResolve}
             onClearTable={handleFeedClearTableRequest}

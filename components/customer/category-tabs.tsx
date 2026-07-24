@@ -25,7 +25,7 @@ export function CategoryTabs({
             key={cat.id}
             onClick={() => onSelect(cat.id)}
             className={cn(
-              "whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              "font-heading whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
               activeId === cat.id
                 ? "bg-accent text-white"
                 : "bg-surface text-text-secondary hover:text-text-primary border border-border"

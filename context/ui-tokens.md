@@ -62,6 +62,46 @@ Status border colors reuse the existing `--color-success` / `--color-warning` / 
 
 ---
 
+### Menu Theme (tenant-customizable, customer menu only)
+
+Unlike everything else in this file, these are not fixed app tokens — they're the closed set of presets a tenant can choose from for their customer-facing menu (`app/(public)/**`, never the admin/KDS/floor apps). Derived by `lib/brand.ts#themeStyleVars` from `tenants.brand_colors` (JSONB: `{ primary, surface, font, layout }`) and injected as inline CSS custom properties on the customer shell's root element. See `ui-registry.md` → "Menu Theme System" for the component-level pattern, and `ui-rules.md` → "Tenant Menu Theming" for why this stays a closed set.
+
+**Brand color** — a single tenant-chosen hex (`primary`) derives the rest:
+
+| Token | Derivation |
+|---|---|
+| `--color-accent` | `primary`, as-is |
+| `--color-accent-hover` | `primary` darkened ~12% |
+| `--color-accent-light` | `primary` lightened ~36% |
+| `--color-accent-dark` | `primary` darkened ~22% |
+| `--color-border-focus` | `primary`, as-is |
+
+**Surface tone** (`surface`) — overrides background/surface/border only; text tokens stay default dark except for `dark` itself:
+
+| Value | Background | Surface | Border |
+|---|---|---|---|
+| `light` (default) | `#F8F9FA` | `#FFFFFF` | `#E5E7EB` |
+| `warm` | `#FAF5EC` | `#FFFDF8` | `#EDE3D3` |
+| `sage` | `#F3F6F1` | `#FAFCF9` | `#DCE5D8` |
+| `blush` | `#FAF1F0` | `#FFF8F7` | `#F0DAD8` |
+| `slate` | `#F1F3F5` | `#F9FAFB` | `#DDE2E7` |
+| `dark` | `#111827` | `#1F2937` | `#374151` (+ text tokens flip to the KDS dark values above) |
+
+**Heading font** (`font`) — applies to `--font-heading` only (titles, not body/numeric text — see `ui-rules.md`):
+
+| Value | Font | Notes |
+|---|---|---|
+| `modern` (default) | Inter | Reuses the already-global `--font-inter`, zero extra font weight |
+| `classic` | Playfair Display | Traditional high-contrast serif |
+| `playful` | Quicksand | Rounded, friendly |
+| `bold` | Fraunces | Warm soft serif — replaced an earlier Cormorant Garamond preset, which read too thin/small at UI text sizes |
+
+Every heading font stack chains `var(--font-noto-sans-arabic)` as a fallback — none of the three curated display fonts have Arabic glyph coverage.
+
+**Layout preset** (`layout`) — not a token, a component-selection switch (see `MenuItemCard` in `ui-registry.md`): `grid` (default, 2-up photo cards) | `compact` (dense single-column rows) | `magazine` (large single-column photo cards).
+
+---
+
 ## Typography
 
 | Element | Size | Weight | Color | Line Height |

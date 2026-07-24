@@ -95,7 +95,7 @@ export function ItemDetailModal({
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </button>
-          <span className="min-w-[24px] text-center text-sm font-semibold">
+          <span className="min-w-[24px] text-center text-sm font-semibold text-text-primary">
             {quantity}
           </span>
           <button

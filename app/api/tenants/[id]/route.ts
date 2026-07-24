@@ -19,7 +19,7 @@ export async function GET(
 
   const { data: tenant, error: tenantErr } = await supabase
     .from("tenants")
-    .select("id, name, slug, logo_url, brand_colors, plan")
+    .select("id, name, slug, logo_url, cover_url, brand_colors, plan")
     .eq("id", id)
     .single();
 
@@ -99,7 +99,7 @@ export async function PATCH(
     .from("tenants")
     .update(result.data)
     .eq("id", id)
-    .select("id, name, slug, logo_url, brand_colors, plan")
+    .select("id, name, slug, logo_url, cover_url, brand_colors, plan")
     .single();
 
   if (updateErr || !tenant) {

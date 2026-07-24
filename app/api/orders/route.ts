@@ -80,22 +80,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Without a time bound the dashboard would return every cancelled
-    // order the tenant has ever had. We constrain to the last 24 hours
-    // so the owner sees "what's happening now + what was cancelled
-    // during the day" but not historical noise from 11 days ago. The
-    // client groups active orders vs. recent cancellations for display.
+    // Without a time bound the dashboard would return every order the
+    // tenant has ever had. We constrain to the last 24 hours so the owner
+    // sees the full day — active orders plus what was delivered/cancelled
+    // during it — without accumulating historical noise from 11 days ago.
+    // Unlike the KDS view above, nothing here fades early: an owner
+    // reviewing their day needs delivered/cancelled orders to actually
+    // stay put, not disappear a couple of minutes after they're resolved.
     const dashboardCutoff = new Date(
       Date.now() - DASHBOARD_WINDOW_MS
     ).toISOString();
-    const readyCutoff = new Date(Date.now() - READY_STALE_MS).toISOString();
 
     let ordersQuery = supabase
       .from("orders")
       .select("*, order_items(*), tables(label), locations(name)")
       .gte("created_at", dashboardCutoff)
-      .in("status", [...KDS_STATUSES, "delivered", "cancelled"])
-      .or(`status.neq.delivered,updated_at.gte.${readyCutoff}`);
+      .in("status", [...KDS_STATUSES, "delivered", "cancelled"]);
 
     if (staffLocationId !== null) {
       ordersQuery = ordersQuery.eq("location_id", staffLocationId);

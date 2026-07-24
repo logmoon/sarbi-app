@@ -543,3 +543,75 @@ import { cn } from '@/lib/utils'
   variant === 'error' && 'error-class'
 )} />
 ```
+
+---
+
+## next/font/google
+
+**Project convention: declare every font once, in `lib/fonts.ts`, never inline in a component.**
+
+next/font requires calls at module scope (build-time static analysis) — declaring the same font in two files creates two separate instances/downloads. Centralizing avoids that and keeps the customer menu's theming (`lib/brand.ts`) and the settings live preview using byte-identical font files.
+
+```ts
+// lib/fonts.ts
+import { Playfair_Display, Quicksand, Fraunces } from "next/font/google";
+
+export const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-playfair", // consumed via var(--font-playfair) in lib/brand.ts
+  display: "swap",
+});
+
+// Bundle every declared font's variable class onto one export, applied as
+// a className on whatever wrapping element needs the CSS vars in scope:
+export const menuFontVariables = `${playfairDisplay.variable} ...`;
+```
+
+```tsx
+// app/(public)/layout.tsx — only the customer-facing route group pays for
+// these fonts; the admin dashboard never imports lib/fonts.ts variables
+// except on the settings page, which needs them for its live preview.
+import { menuFontVariables } from "@/lib/fonts";
+
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  return <div className={menuFontVariables}>{children}</div>;
+}
+```
+
+- Google Fonts here don't cover Arabic glyphs — always chain a fallback: `` `${fontVar}, var(--font-noto-sans-arabic), sans-serif` ``, so Arabic text in themed content falls back per-character instead of hitting the browser default.
+- The app's default typeface (`--font-inter`) is loaded once in the root `app/layout.tsx` and is *not* in `lib/fonts.ts` — it's already global, so a "no dedicated font" preset (see `lib/brand.ts`'s `"modern"`) should reuse it directly rather than re-declaring it.
+
+---
+
+## Recharts
+
+**Project convention: pass CSS variable tokens directly as prop values, and set `contentStyle`/`labelStyle` inline (not via Tailwind classes) on `<Tooltip>`.**
+
+Recharts forwards string prop values straight through to SVG attributes, so `var(--color-accent)` works exactly like a literal hex value would — this is how every chart in the project stays theme-token-driven with zero hardcoded colors.
+
+```tsx
+<BarChart data={data}>
+  <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
+  <XAxis stroke="var(--color-text-muted)" fontSize={12} tickLine={false} />
+  <Tooltip
+    contentStyle={{
+      backgroundColor: "var(--color-surface)",
+      border: "1px solid var(--color-border)",
+      borderRadius: "6px",
+    }}
+    labelStyle={{ color: "var(--color-text-secondary)" }}
+  />
+  <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+    {/* Cell-per-datapoint lets one bar (e.g. the peak hour) be highlighted
+        without a second series or conditional dataKey */}
+    {data.map((d) => (
+      <Cell key={d.hour} fill={d.hour === peakHour ? "var(--color-accent)" : "rgba(245, 158, 11, 0.35)"} />
+    ))}
+  </Bar>
+</BarChart>
+```
+
+- `LineChart` (orders-over-time) and `BarChart` (peak hours) are the two chart types in use — both in `components/analytics/analytics-dashboard.tsx`.
+- Always wrap in `<ResponsiveContainer width="100%" height="100%">` inside a fixed-height parent (`className="h-56"` etc.) — Recharts can't compute a size from an unconstrained parent.
+

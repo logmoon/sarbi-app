@@ -31,9 +31,6 @@ export type LiveOrder = {
   locations: { name: string } | null;
 };
 
-// How long a `delivered` order stays visible before it fades out of the list.
-export const DELIVERED_FADE_MS = 30_000;
-
 export function useLiveOrders(tenantId: string): {
   orders: LiveOrder[];
   loading: boolean;
@@ -43,27 +40,8 @@ export function useLiveOrders(tenantId: string): {
   const [orders, setOrders] = useState<LiveOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fadeTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const ordersRef = useRef(orders);
   ordersRef.current = orders;
-
-  const removeOrder = useCallback((id: string) => {
-    setOrders((prev) => prev.filter((o) => o.id !== id));
-    const timer = fadeTimers.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      fadeTimers.current.delete(id);
-    }
-  }, []);
-
-  const scheduleFade = useCallback(
-    (id: string) => {
-      if (fadeTimers.current.has(id)) return;
-      const timer = setTimeout(() => removeOrder(id), DELIVERED_FADE_MS);
-      fadeTimers.current.set(id, timer);
-    },
-    [removeOrder]
-  );
 
   const fetchOrders = useCallback(async () => {
     if (!tenantId) return;
@@ -80,17 +58,12 @@ export function useLiveOrders(tenantId: string): {
       const json = await res.json();
       const fetched: LiveOrder[] = json.data ?? [];
       setOrders(fetched);
-      // Anything that arrived already `delivered` (page refresh shortly
-      // after floor confirmed it) fades on its own schedule.
-      fetched.forEach((o) => {
-        if (o.status === "delivered") scheduleFade(o.id);
-      });
     } catch {
       setError("Failed to load orders");
     } finally {
       setLoading(false);
     }
-  }, [tenantId, scheduleFade]);
+  }, [tenantId]);
 
   useEffect(() => {
     fetchOrders();
@@ -136,16 +109,6 @@ export function useLiveOrders(tenantId: string): {
             // subscription (shouldn't happen with RLS, but defensive).
             if (updated.tenant_id !== tenantId) return;
 
-            if (updated.status === "delivered") {
-              setOrders((prev) => {
-                const exists = prev.some((o) => o.id === updated.id);
-                if (!exists) return prev;
-                return prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o));
-              });
-              scheduleFade(updated.id);
-              return;
-            }
-
             setOrders((prev) => {
               const exists = prev.some((o) => o.id === updated.id);
               if (!exists) return prev;
@@ -162,15 +125,7 @@ export function useLiveOrders(tenantId: string): {
         supabase.removeChannel(channel);
       }
     };
-  }, [tenantId, fetchOrders, scheduleFade]);
-
-  useEffect(() => {
-    const timers = fadeTimers.current;
-    return () => {
-      timers.forEach((t) => clearTimeout(t));
-      timers.clear();
-    };
-  }, []);
+  }, [tenantId, fetchOrders]);
 
   return { orders, loading, error, refetch: fetchOrders };
 }

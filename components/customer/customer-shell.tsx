@@ -8,7 +8,7 @@ import { useMenu, type MenuItem } from "@/hooks/use-menu";
 import { useOrders } from "@/hooks/use-orders";
 import { useEvents } from "@/hooks/use-events";
 import { t } from "@/lib/i18n";
-import { brandStyleVars, parseBrandColors } from "@/lib/brand";
+import { themeStyleVars, parseMenuTheme } from "@/lib/brand";
 import { LanguageToggle } from "@/components/customer/language-toggle";
 import { NamePromptModal } from "@/components/customer/name-prompt-modal";
 import { AreYouWithModal } from "@/components/customer/are-you-with-modal";
@@ -28,8 +28,9 @@ type CustomerShellProps = {
   publicCode: string;
   tenantName: string;
   tenantLogo: string | null;
+  tenantCover: string | null;
   tenantPlan: string;
-  brandColors: Record<string, string> | null;
+  theme: unknown;
 };
 
 export function CustomerShell({
@@ -37,8 +38,9 @@ export function CustomerShell({
   publicCode,
   tenantName,
   tenantLogo,
+  tenantCover,
   tenantPlan,
-  brandColors,
+  theme,
 }: CustomerShellProps) {
   const { locale, changeLocale } = useLanguage();
   const session = useSession(publicCode);
@@ -198,12 +200,15 @@ export function CustomerShell({
 
   const customerName = session.session?.customer_name;
 
-  // brandStyleVars derives --color-accent, --color-accent-hover,
-  // --color-accent-light, --color-border-focus, --color-accent-dark from
-  // the owner's brand color. Without this, hover/focus/light variants on
-  // buttons and inputs fall back to the default Sarbi amber — see
-  // lib/brand.ts for the full rationale.
-  const brandVars = brandStyleVars(parseBrandColors(brandColors));
+  // themeStyleVars derives --color-accent, --color-accent-hover,
+  // --color-accent-light, --color-border-focus, --color-accent-dark, the
+  // surface tone, and --font-heading from the owner's theme choices.
+  // Without this, hover/focus/light variants on buttons and inputs fall
+  // back to the default Sarbi amber — see lib/brand.ts for the full
+  // rationale.
+  const parsedTheme = parseMenuTheme(theme);
+  const themeVars = themeStyleVars(parsedTheme);
+  const layoutPreset = parsedTheme?.layout ?? "grid";
 
   if (blocked) {
     return (
@@ -219,7 +224,16 @@ export function CustomerShell({
   }
 
   return (
-    <div className="min-h-screen bg-background" style={brandVars as React.CSSProperties}>
+    <div className="min-h-screen bg-background" style={themeVars as React.CSSProperties}>
+      {tenantCover && (
+        <div className="h-44 w-full overflow-hidden sm:h-56">
+          <img
+            src={tenantCover}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        </div>
+      )}
       <header className="sticky top-0 z-30 border-b border-border bg-surface">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
@@ -231,7 +245,7 @@ export function CustomerShell({
               />
             )}
             <div>
-              <h1 className="text-base font-semibold text-text-primary">
+              <h1 className="font-heading text-base font-semibold text-text-primary">
                 {tenantName}
               </h1>
               {customerName && (
@@ -274,12 +288,21 @@ export function CustomerShell({
           <div className="mx-auto max-w-2xl px-4 py-4">
             {filteredCategories.map((cat) => (
               <div key={cat.id} className="mb-6">
-                <div className="grid grid-cols-2 gap-3">
+                <div
+                  className={
+                    layoutPreset === "compact"
+                      ? "flex flex-col overflow-hidden rounded-sm border border-border"
+                      : layoutPreset === "magazine"
+                      ? "flex flex-col gap-4"
+                      : "grid grid-cols-2 gap-3"
+                  }
+                >
                   {cat.items.map((item) => (
                     <MenuItemCard
                       key={item.id}
                       item={item}
                       locale={locale}
+                      layout={layoutPreset}
                       onAdd={cart.addItem}
                       onClick={setSelectedItem}
                     />

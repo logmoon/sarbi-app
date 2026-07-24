@@ -163,7 +163,7 @@ const hexColor = z
   .string()
   .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a 6-digit hex color (e.g. #F59E0B)");
 
-export const brandColorsSchema = z.object({
+export const menuThemeSchema = z.object({
   primary: hexColor,
   // accent is optional. The current customer UI cascades from `primary`
   // (which drives --color-accent, --color-accent-hover, etc. via
@@ -171,11 +171,16 @@ export const brandColorsSchema = z.object({
   // for forward-compat when a future theme wants the accent to be
   // distinct from the primary.
   accent: hexColor.optional(),
+  surface: z.enum(["light", "warm", "sage", "blush", "slate", "dark"]).optional(),
+  font: z.enum(["modern", "classic", "playful", "bold"]).optional(),
+  layout: z.enum(["grid", "compact", "magazine"]).optional(),
 });
 
 export const updateTenantSettingsSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  brand_colors: brandColorsSchema.optional(),
+  brand_colors: menuThemeSchema.optional(),
+  logo_url: z.string().url().nullable().optional(),
+  cover_url: z.string().url().nullable().optional(),
 });
 
 export type UpdateTenantSettingsInput = z.infer<typeof updateTenantSettingsSchema>;

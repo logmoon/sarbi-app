@@ -8,6 +8,7 @@ export type FloorOrder = Order & {
   location_id: string;
   updated_at: string;
   cancelled_reason: string | null;
+  cancelled_acknowledged_at: string | null;
   tables: { label: string } | null;
 };
 
@@ -16,6 +17,7 @@ export function useFloorOrders(locationId: string): {
   loading: boolean;
   error: string | null;
   confirmDelivered: (orderId: string) => Promise<void>;
+  acknowledgeCancelled: (orderId: string) => Promise<void>;
   refetch: () => Promise<void>;
 } {
   const [orders, setOrders] = useState<FloorOrder[]>([]);
@@ -127,5 +129,33 @@ export function useFloorOrders(locationId: string): {
     []
   );
 
-  return { orders, loading, error, confirmDelivered, refetch: fetchOrders };
+  const acknowledgeCancelled = useCallback(async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/acknowledge`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        setError(json?.error ?? "Failed to acknowledge order");
+        return;
+      }
+      const now = new Date().toISOString();
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId ? { ...o, cancelled_acknowledged_at: now } : o
+        )
+      );
+    } catch {
+      setError("Failed to acknowledge order");
+    }
+  }, []);
+
+  return {
+    orders,
+    loading,
+    error,
+    confirmDelivered,
+    acknowledgeCancelled,
+    refetch: fetchOrders,
+  };
 }
